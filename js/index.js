@@ -255,10 +255,10 @@
         Suffix: {
             about: '简单地活着, 肆意又精彩.'
         },
-        Theme: {
-            url: 'https://github.com/first19326/Hexo-LiveForCode',
-            name: 'Hexo - Live For Code'
-        }
+        // Theme: {
+        //     url: 'https://github.com/first19326/Hexo-LiveForCode',
+        //     name: 'Hexo - Live For Code'
+        // }
     };
 
     window.config = $.extend(true, window.defaultConfig, window.config);
