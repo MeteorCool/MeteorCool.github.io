@@ -97,6 +97,10 @@
   content: "\e637";
 }
 
+.icon-CSDN:before {
+  content: "\00A9";
+}
+
 .icon-github:before {
   content: "\e732";
 }
