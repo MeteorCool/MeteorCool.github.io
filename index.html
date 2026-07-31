@@ -408,7 +408,7 @@
         <div class="label text-third-text-color text-sm">Categories</div>
     </a>
     <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/archives">
-        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">5</div>
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">6</div>
         <div class="label text-third-text-color text-sm">Posts</div>
     </a>
 </div>
@@ -503,7 +503,7 @@
         <div class="label text-third-text-color text-sm">Categories</div>
     </a>
     <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/archives">
-        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">5</div>
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">6</div>
         <div class="label text-third-text-color text-sm">Posts</div>
     </a>
 </div>
@@ -528,7 +528,105 @@
                 
                 <div class="flex flex-col gap-5 px-7 pb-7 pt-7">
                     <h3 class="home-article-title">
-                        <a href="/2026/07/29/BIOS/BIOS%20Code/PEI/PEI-phase-2/">
+                        <a href="/2026/07/30/PEI-Phase-3-PeiDispatcher/">
+                            PEI Phase (3) PeiDispatcher
+                        </a>
+                    </h3>
+
+                    <div class="home-article-content markdown-body">
+                        
+                            
+                            ​		PeiDispatcher 是peicore 的核心派遣逻辑，主要功能是发现并派遣PEIM，遍历全部peim，依次评估其依赖条件是否满足，满足则安装PEIM，知道没有可以加载的PEIM。同事peidispatcher也会检测物理内存是否安装，当发现物理内存时，则会将栈从临时内存切换到物理内存。
+dispatcher 流程图如下：
+
+PEIM 的在派遣过程的状态切换示意：
+
+dispat...
+                        
+                    </div>
+
+                    <div class="home-article-meta-info-container">
+    <div class="home-article-meta-info">
+        <span><i class="fa-solid fa-calendars"></i>&nbsp;
+            <span class="home-article-date" data-date="Thu Jul 30 2026 09:08:34 GMT+0800">
+                
+                    2026-07-30
+                
+            </span>
+        </span>
+        
+            <span class="home-article-category">
+                <i class="fa-solid fa-folders"></i>&nbsp;
+            <ul>
+                
+                
+                    
+                        
+                        <li>
+                            <a href="/categories/BIOS/">BIOS</a>&nbsp;
+                        </li>
+                    
+                    
+                
+                    
+                        
+                            <li>></li>
+                        
+                        <li>
+                            <a href="/categories/BIOS/BIOS-Code/">BIOS Code</a>&nbsp;
+                        </li>
+                    
+                    
+                
+                    
+                        
+                            <li>></li>
+                        
+                        <li>
+                            <a href="/categories/BIOS/BIOS-Code/PEI/">PEI</a>&nbsp;
+                        </li>
+                    
+                    
+                
+            </ul>
+        </span>
+        
+        
+            <span class="home-article-tag">
+                <i class="fa-solid fa-tags"></i>&nbsp;
+                <ul>
+                    
+                        <li>
+                            
+                            <a href="/tags/PEI/">PEI</a>&nbsp;
+                        </li>
+                    
+                        <li>
+                            | 
+                            <a href="/tags/Code/">Code</a>&nbsp;
+                        </li>
+                    
+                </ul>
+            </span>
+        
+    </div>
+
+    <a href="/2026/07/30/PEI-Phase-3-PeiDispatcher/">Read more<span class="seo-reader-text">PEI Phase (3) PeiDispatcher</span>&nbsp;<i class="fa-solid fa-angle-right"></i></a>
+</div>
+
+                </div>
+            </li>
+        
+            <li class="home-article-item">
+
+                
+
+                
+
+                
+                <div class="flex flex-col gap-5 px-7 pb-7 pt-7">
+                    <h3 class="home-article-title">
+                        <a href="/2026/07/29/PEI-phase-2/">
                             PEI phase (2)
                         </a>
                     </h3>
@@ -612,7 +710,7 @@
         
     </div>
 
-    <a href="/2026/07/29/BIOS/BIOS%20Code/PEI/PEI-phase-2/">Read more<span class="seo-reader-text">PEI phase (2)</span>&nbsp;<i class="fa-solid fa-angle-right"></i></a>
+    <a href="/2026/07/29/PEI-phase-2/">Read more<span class="seo-reader-text">PEI phase (2)</span>&nbsp;<i class="fa-solid fa-angle-right"></i></a>
 </div>
 
                 </div>
@@ -1012,7 +1110,7 @@ UEFI  Home | Unifi...
                 
                 <p class="post-count space-x-0.5">
                     <span>
-                        5 posts in total
+                        6 posts in total
                     </span>
                     
                 </p>
