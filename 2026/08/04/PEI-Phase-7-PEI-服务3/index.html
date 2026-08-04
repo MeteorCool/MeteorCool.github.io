@@ -78,7 +78,7 @@
     
     <!--- Seo Part-->
     
-    <link rel="canonical" href="https://meteorcool.github.io/2026/07/29/pei-phase-2/"/>
+    <link rel="canonical" href="https://meteorcool.github.io/2026/08/04/pei-phase-7-pei-服务3/"/>
     <meta name="robots" content="index,follow">
     <meta name="googlebot" content="index,follow">
     <meta name="revisit-after" content="1 days">
@@ -87,14 +87,14 @@
         
         <meta name="description" content="Hexo Theme Redefine, Redefine Your Hexo Journey.">
 <meta property="og:type" content="article">
-<meta property="og:title" content="PEI phase (2)">
-<meta property="og:url" content="https://meteorcool.github.io/2026/07/29/PEI-phase-2/index.html">
+<meta property="og:title" content="PEI Phase (7) PEI 服务3">
+<meta property="og:url" content="https://meteorcool.github.io/2026/08/04/PEI-Phase-7-PEI-%E6%9C%8D%E5%8A%A13/index.html">
 <meta property="og:site_name" content="Development Notes of Meteor">
 <meta property="og:description" content="Hexo Theme Redefine, Redefine Your Hexo Journey.">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://meteorcool.github.io/images/redefine-og.webp">
-<meta property="article:published_time" content="2026-07-29T01:16:39.000Z">
-<meta property="article:modified_time" content="2026-07-30T01:09:38.639Z">
+<meta property="article:published_time" content="2026-08-04T05:51:00.000Z">
+<meta property="article:modified_time" content="2026-08-04T05:51:10.453Z">
 <meta property="article:author" content="Meteor Liu">
 <meta property="article:tag" content="Code">
 <meta property="article:tag" content="PEI">
@@ -111,7 +111,7 @@
     
     <title>
         
-            PEI phase (2) | Development Notes of Meteor
+            PEI Phase (7) PEI 服务3 | Development Notes of Meteor
         
     </title>
 
@@ -352,7 +352,7 @@
 		<div class="article-title relative w-full">
 			
 			<div class="w-full flex items-center pt-6 justify-start">
-				<h1 class="article-title-regular text-second-text-color tracking-tight text-4xl md:text-6xl font-semibold px-2 sm:px-6 md:px-8 py-3">PEI phase (2)</h1>
+				<h1 class="article-title-regular text-second-text-color tracking-tight text-4xl md:text-6xl font-semibold px-2 sm:px-6 md:px-8 py-3">PEI Phase (7) PEI 服务3</h1>
 			</div>
 			
 		</div>
@@ -373,15 +373,15 @@
 					<div class="article-meta-info">
     <span class="article-date article-meta-item">
         <i class="fa-regular fa-pen-fancy"></i>&nbsp;
-        <span class="desktop">2026-07-29 09:16:39</span>
-        <span class="mobile">2026-07-29 09:16:39</span>
+        <span class="desktop">2026-08-04 13:51</span>
+        <span class="mobile">2026-08-04 13:51</span>
         <span class="hover-info">Created</span>
     </span>
     
         <span class="article-date article-meta-item">
             <i class="fa-regular fa-wrench"></i>&nbsp;
-            <span class="desktop">2026-07-30 09:09:38</span>
-            <span class="mobile">2026-07-30 09:09:38</span>
+            <span class="desktop">2026-08-04 13:51:10</span>
+            <span class="mobile">2026-08-04 13:51:10</span>
             <span class="hover-info">Updated</span>
         </span>
     
@@ -459,99 +459,25 @@
 
 
 		<div class="article-content markdown-body px-2 sm:px-6 md:px-8 pb-8">
-			<p>  前文简单说明了PEICORE的执行逻辑，这个篇章主要是对PEICORE的主要函数进行说明：</p>
-<p>​	<strong>1</strong>  前文提到Peicore第二次进入时会加载到物理内存，这个动作由ShadowPeiCore 函数完成<br><img  
-                     lazyload
-                     src="/images/loading.svg"
-                     data-src="/../images/PEI-phase-2/image-20260729100224819.png"
-                      alt="image-20260729100224819"
-                ></p>
-<p>下面是函数原型</p>
-<p><img  
-                     lazyload
-                     src="/images/loading.svg"
-                     data-src="/../images/PEI-phase-2/image-20260729100655425.png"
-                      alt="image-20260729100655425"
-                ></p>
-<p>上面函数动作就是在BFV 当中寻找到PEICore，默认peicore 位于FV[0]的位置。</p>
-<p><img  
-                     lazyload
-                     src="/images/loading.svg"
-                     data-src="/../images/PEI-phase-2/image-20260729100900030.png"
-                      alt="image-20260729100900030"
-                ></p>
-<p>找到peicore 之后通过peiloadimage 函数将其加载到内存当中，最后则是计算peicore 函数的地址，并且返回该地址。</p>
-<p>​	<strong>2</strong>.  内存初始化：pei 阶段的核心动作之一，由InitializeMemoryServices 函数完成</p>
-<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br></pre></td><td class="code"><pre><span class="line">**/</span><br><span class="line">VOID</span><br><span class="line">InitializeMemoryServices (</span><br><span class="line">  IN PEI_CORE_INSTANCE           *PrivateData,</span><br><span class="line">  IN CONST EFI_SEC_PEI_HAND_OFF  *SecCoreData,</span><br><span class="line">  IN PEI_CORE_INSTANCE           *OldCoreData</span><br><span class="line">  )</span><br><span class="line">&#123;</span><br><span class="line">  VOID             *HobList;</span><br><span class="line">  EFI_STATUS       Status;</span><br><span class="line">  EFI_MEMORY_TYPE  Type;</span><br><span class="line"></span><br><span class="line">  PrivateData-&gt;SwitchStackSignal = FALSE;</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // First entering PeiCore, following code will initialized some field</span><br><span class="line">  // in PeiCore&#x27;s private data according to hand off data from SEC core.</span><br><span class="line">  //</span><br><span class="line">  if (OldCoreData == NULL) &#123;</span><br><span class="line">    PrivateData-&gt;PeiMemoryInstalled = FALSE;</span><br><span class="line">    PrivateData-&gt;HobList.Raw        = SecCoreData-&gt;PeiTemporaryRamBase;</span><br><span class="line"></span><br><span class="line">    PeiCoreBuildHobHandoffInfoTable (</span><br><span class="line">      BOOT_WITH_FULL_CONFIGURATION,</span><br><span class="line">      (EFI_PHYSICAL_ADDRESS)(UINTN)SecCoreData-&gt;PeiTemporaryRamBase,</span><br><span class="line">      (UINTN)SecCoreData-&gt;PeiTemporaryRamSize</span><br><span class="line">      );</span><br><span class="line"></span><br><span class="line">    //</span><br><span class="line">    // Set Ps to point to ServiceTableShadow in Cache</span><br><span class="line">    //</span><br><span class="line">    PrivateData-&gt;Ps = &amp;(PrivateData-&gt;ServiceTableShadow);</span><br><span class="line">  &#125; else &#123;</span><br><span class="line">    // We have permanent memory now, so we should set up the memory bins if we can. No matter what, initialize the</span><br><span class="line">    // structures</span><br><span class="line">    PrivateData-&gt;MemoryTypeInformationInitialized = FALSE;</span><br><span class="line">    PrivateData-&gt;MemoryTypeInformation            = NULL;</span><br><span class="line">    PrivateData-&gt;MemoryTypeStatistics             = NULL;</span><br><span class="line"></span><br><span class="line">    // Check if the platform has opted in to the PEI memory bins feature</span><br><span class="line">    if (FeaturePcdGet (PcdPeiMemoryBinsEnable)) &#123;</span><br><span class="line">      Status = PeiGetHobList ((CONST EFI_PEI_SERVICES **)&amp;PrivateData-&gt;Ps, &amp;HobList);</span><br><span class="line">      if (EFI_ERROR (Status)) &#123;</span><br><span class="line">        ASSERT_EFI_ERROR (Status);</span><br><span class="line">        return;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      PrivateData-&gt;MemoryTypeInformation = AllocateZeroPool (sizeof (EFI_MEMORY_TYPE_INFORMATION) * (EfiMaxMemoryType + 1));</span><br><span class="line">      PrivateData-&gt;MemoryTypeStatistics  = AllocateZeroPool (sizeof (EFI_MEMORY_TYPE_STATISTICS) * (EfiMaxMemoryType + 1));</span><br><span class="line"></span><br><span class="line">      if ((PrivateData-&gt;MemoryTypeInformation == NULL) || (PrivateData-&gt;MemoryTypeStatistics == NULL)) &#123;</span><br><span class="line">        DEBUG ((DEBUG_ERROR, &quot;%a: Failed to allocate memory for PEI memory bins\n&quot;, __func__));</span><br><span class="line">        ASSERT (FALSE);</span><br><span class="line">        return;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      for (Type = 0; Type &lt; EfiMaxMemoryType; Type++) &#123;</span><br><span class="line">        PrivateData-&gt;MemoryTypeInformation[Type].Type = Type;</span><br><span class="line"></span><br><span class="line">        PrivateData-&gt;MemoryTypeStatistics[Type].InformationIndex = EfiMaxMemoryType;</span><br><span class="line"></span><br><span class="line">        switch (Type) &#123;</span><br><span class="line">          case EfiRuntimeServicesCode:</span><br><span class="line">          case EfiRuntimeServicesData:</span><br><span class="line">          case EfiPalCode:</span><br><span class="line">            PrivateData-&gt;MemoryTypeStatistics[Type].Runtime = TRUE;</span><br><span class="line">          // fall through</span><br><span class="line">          case EfiReservedMemoryType:</span><br><span class="line">          case EfiACPIReclaimMemory:</span><br><span class="line">          case EfiACPIMemoryNVS:</span><br><span class="line">          case EfiUnacceptedMemoryType:</span><br><span class="line">            PrivateData-&gt;MemoryTypeStatistics[Type].Special = TRUE;</span><br><span class="line">            break;</span><br><span class="line">          default:</span><br><span class="line">            break;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      Status = PopulateMemoryTypeInformation (PrivateData-&gt;MemoryTypeInformation);</span><br><span class="line">      if (EFI_ERROR (Status)) &#123;</span><br><span class="line">        //</span><br><span class="line">        // Couldn&#x27;t find the memory type information HOB, so we can&#x27;t set up bins</span><br><span class="line">        //</span><br><span class="line">        DEBUG ((</span><br><span class="line">          DEBUG_ERROR,</span><br><span class="line">          &quot;Memory Type Information HOB not found during memory services initialization but PCD was set\n&quot;</span><br><span class="line">          ));</span><br><span class="line">        ASSERT_EFI_ERROR (Status);</span><br><span class="line">        return;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      InitializeMemoryTypeInformationBins (PrivateData, &amp;HobList);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  return;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
-
-<p>初始化可用的内存服务。第一个输入参数是 PeiCore内部数据，第二个参数是 SEC 的传递数据，记录了临时可用的内存空间，最后一个参数是旧的内部实例数据。</p>
-<p>首次进入peicore 的时候，内存没有初始化，使用sec提供的CAR作为可用内存空间来传递hob，搭建pei service table，代码如下：</p>
-<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">if (OldCoreData == NULL) &#123;</span><br><span class="line">  PrivateData-&gt;PeiMemoryInstalled = FALSE;</span><br><span class="line">  PrivateData-&gt;HobList.Raw        = SecCoreData-&gt;PeiTemporaryRamBase;</span><br><span class="line"></span><br><span class="line">  PeiCoreBuildHobHandoffInfoTable (</span><br><span class="line">    BOOT_WITH_FULL_CONFIGURATION,</span><br><span class="line">    (EFI_PHYSICAL_ADDRESS)(UINTN)SecCoreData-&gt;PeiTemporaryRamBase,</span><br><span class="line">    (UINTN)SecCoreData-&gt;PeiTemporaryRamSize</span><br><span class="line">    );</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Set Ps to point to ServiceTableShadow in Cache</span><br><span class="line">  //</span><br><span class="line">  PrivateData-&gt;Ps = &amp;(PrivateData-&gt;ServiceTableShadow);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
-
-<p>后半段代码，当OldCoreData不为空，也就意味着CAR 拷贝完成，OldCoreData指向的是car当中的PEICORE</p>
-<p><img  
-                     lazyload
-                     src="/images/loading.svg"
-                     data-src="/../images/PEI-phase-2/image-20260729135832399.png"
-                      alt="image-20260729135832399"
-                ></p>
-<p>调用 PEI 服务拿到 DDR 上新的 HOB 链表基址。CAR 搬迁时 ConvertPpiPointers 已经修复 HOB 指针，此时 HOB 全部位于物理内存</p>
-<p><img  
-                     lazyload
-                     src="/images/loading.svg"
-                     data-src="/../images/PEI-phase-2/image-20260729135945031.png"
-                      alt="image-20260729135945031"
-                ></p>
-<p>申请两块连续内存，用于存储内存信息和内存的运行记录统计</p>
-<p><img  
-                     lazyload
-                     src="/images/loading.svg"
-                     data-src="/../images/PEI-phase-2/image-20260729140140306.png"
-                      alt="image-20260729140140306"
-                ></p>
-<p>对所有内存类型进行遍历，分别打上不同标签。</p>
-<p><strong>Runtime &#x3D; TRUE</strong>：运行时内存（Runtime Code&#x2F;Data、PalCode），操作系统运行时依然要保留，不能被回收</p>
-<p><strong>Special &#x3D; TRUE</strong>：特殊内存，包含运行时内存、保留内存、ACPI 回收内存、ACPI NVS、未接受内存；</p>
-<p>其余则是普通内存</p>
-<p><img  
-                     lazyload
-                     src="/images/loading.svg"
-                     data-src="/../images/PEI-phase-2/image-20260729140519721.png"
-                      alt="image-20260729140519721"
-                ></p>
-<p>PopulateMemoryTypeInformation：遍历 HOB 链表，读取平台预先准备的<code>EFI_HOB_MEMORY_TYPE_INFORMATION</code> HOB，填充各类内存的最小对齐、限制大小等配置。</p>
-<p>InitializeMemoryTypeInformationBins：正式初始化内存分类规则，绑定 HOB、统计数组，后续 PEI 所有内存申请自动归入对分类。</p>
-<p><strong>3</strong>  pei阶段的PPI 的dispatch 逻辑是PEIM 的核心基础，早期进入peicore dispatch初始化由InitializeDispatcherData 完成</p>
-<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">VOID</span><br><span class="line">InitializeDispatcherData (</span><br><span class="line">  IN PEI_CORE_INSTANCE           *PrivateData,</span><br><span class="line">  IN PEI_CORE_INSTANCE           *OldCoreData,</span><br><span class="line">  IN CONST EFI_SEC_PEI_HAND_OFF  *SecCoreData</span><br><span class="line">  )</span><br><span class="line">&#123;</span><br><span class="line">  if (OldCoreData == NULL) &#123;</span><br><span class="line">    PrivateData-&gt;PeimDispatcherReenter = FALSE;</span><br><span class="line">    PeiInitializeFv (PrivateData, SecCoreData);</span><br><span class="line">  &#125; else &#123;</span><br><span class="line">    PeiReinitializeFv (PrivateData);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  return;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
-
-<p>首次进入peicore 的时候会解析BFV 空间，并安装 Ffs2FvPpi 服务及 FvInfoPpi 的回调函数。</p>
-<p>第二次进入则是将相关服务重新安装到内存当中。</p>
-<p>第一次进入peicore 的时候， 初始化PeiCore FV List.</p>
-<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line">VOID</span><br><span class="line">PeiInitializeFv (</span><br><span class="line">  IN  PEI_CORE_INSTANCE          *PrivateData,</span><br><span class="line">  IN CONST EFI_SEC_PEI_HAND_OFF  *SecCoreData</span><br><span class="line">  )</span><br><span class="line">&#123;</span><br><span class="line">  EFI_STATUS                   Status;</span><br><span class="line">  EFI_PEI_FIRMWARE_VOLUME_PPI  *FvPpi;</span><br><span class="line">  EFI_PEI_FV_HANDLE            FvHandle;</span><br><span class="line">  EFI_FIRMWARE_VOLUME_HEADER   *BfvHeader;</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Install FV_PPI for FFS2 file system.</span><br><span class="line">  //</span><br><span class="line">  PeiServicesInstallPpi (&amp;mPeiFfs2FvPpiList);</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Install FV_PPI for FFS3 file system.</span><br><span class="line">  //</span><br><span class="line">  PeiServicesInstallPpi (&amp;mPeiFfs3FvPpiList);</span><br><span class="line"></span><br><span class="line">  BfvHeader = (EFI_FIRMWARE_VOLUME_HEADER *)SecCoreData-&gt;BootFirmwareVolumeBase;//获取 BFV 数据空间的地址</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // The FV_PPI in BFV&#x27;s format should be installed.</span><br><span class="line">  //</span><br><span class="line">  Status = PeiServicesLocatePpi (</span><br><span class="line">             &amp;BfvHeader-&gt;FileSystemGuid,</span><br><span class="line">             0,</span><br><span class="line">             NULL,</span><br><span class="line">             (VOID **)&amp;FvPpi</span><br><span class="line">             );</span><br><span class="line">  ASSERT_EFI_ERROR (Status);</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Get handle of BFV</span><br><span class="line">  //</span><br><span class="line">  Status = FvPpi-&gt;ProcessVolume (</span><br><span class="line">                    FvPpi,</span><br><span class="line">                    SecCoreData-&gt;BootFirmwareVolumeBase,</span><br><span class="line">                    (UINTN)BfvHeader-&gt;FvLength,</span><br><span class="line">                    &amp;FvHandle</span><br><span class="line">                    );</span><br><span class="line">  ASSERT_EFI_ERROR (Status);</span><br><span class="line"></span><br><span class="line">  PrivateData-&gt;Fv = AllocateZeroPool (sizeof (PEI_CORE_FV_HANDLE) * FV_GROWTH_STEP);</span><br><span class="line">  ASSERT (PrivateData-&gt;Fv != NULL);</span><br><span class="line">  PrivateData-&gt;MaxFvCount = FV_GROWTH_STEP;</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Update internal PEI_CORE_FV array.</span><br><span class="line">  //</span><br><span class="line">  PrivateData-&gt;Fv[PrivateData-&gt;FvCount].FvHeader             = BfvHeader;</span><br><span class="line">  PrivateData-&gt;Fv[PrivateData-&gt;FvCount].FvPpi                = FvPpi;</span><br><span class="line">  PrivateData-&gt;Fv[PrivateData-&gt;FvCount].FvHandle             = FvHandle;</span><br><span class="line">  PrivateData-&gt;Fv[PrivateData-&gt;FvCount].AuthenticationStatus = 0;</span><br><span class="line">  DEBUG ((</span><br><span class="line">    DEBUG_INFO,</span><br><span class="line">    &quot;The %dth FV[%g] start address is 0x%11p, size is 0x%08x, handle is 0x%p\n&quot;,</span><br><span class="line">    (UINT32)PrivateData-&gt;FvCount,</span><br><span class="line">    GetFvName (BfvHeader),</span><br><span class="line">    (VOID *)BfvHeader,</span><br><span class="line">    (UINT32)BfvHeader-&gt;FvLength,</span><br><span class="line">    FvHandle</span><br><span class="line">    ));</span><br><span class="line">  PrivateData-&gt;FvCount++;</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Post a call-back for the FvInfoPPI and FvInfo2PPI services to expose</span><br><span class="line">  // additional FVs to PeiCore.</span><br><span class="line">  //</span><br><span class="line">  Status = PeiServicesNotifyPpi (mNotifyOnFvInfoList);</span><br><span class="line">  ASSERT_EFI_ERROR (Status);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
-
-<p> PeiReInitializeFv()函数，重新安装加载后的 Ffs2FvPpi。</p>
-<p>PEI 内核镜像重映射至常驻内存后，所有内置 FvPPI 必须基于常驻内存内的实例完成重装；同时需要修正<code>PrivateData-&gt;Fv[]</code>数组中全部缓存的 FvPPI 指针，使其指向常驻内存中的对应实例。</p>
-<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line">VOID</span><br><span class="line">PeiReinitializeFv (</span><br><span class="line">  IN  PEI_CORE_INSTANCE  *PrivateData</span><br><span class="line">  )</span><br><span class="line">&#123;</span><br><span class="line">  VOID                    *OldFfsFvPpi;</span><br><span class="line">  EFI_PEI_PPI_DESCRIPTOR  *OldDescriptor;</span><br><span class="line">  UINTN                   Index;</span><br><span class="line">  EFI_STATUS              Status;</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Locate old build-in Ffs2 EFI_PEI_FIRMWARE_VOLUME_PPI which</span><br><span class="line">  // in flash.</span><br><span class="line">  //</span><br><span class="line">  Status = PeiServicesLocatePpi (</span><br><span class="line">             &amp;gEfiFirmwareFileSystem2Guid,</span><br><span class="line">             0,</span><br><span class="line">             &amp;OldDescriptor,</span><br><span class="line">             &amp;OldFfsFvPpi</span><br><span class="line">             );</span><br><span class="line">  ASSERT_EFI_ERROR (Status);</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Re-install the EFI_PEI_FIRMWARE_VOLUME_PPI for build-in Ffs2</span><br><span class="line">  // which is shadowed from flash to permanent memory within PeiCore image.</span><br><span class="line">  //</span><br><span class="line">  Status = PeiServicesReInstallPpi (OldDescriptor, &amp;mPeiFfs2FvPpiList);</span><br><span class="line">  ASSERT_EFI_ERROR (Status);</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Fixup all FvPpi pointers for the implementation in flash to permanent memory.</span><br><span class="line">  //</span><br><span class="line">  for (Index = 0; Index &lt; PrivateData-&gt;FvCount; Index++) &#123;</span><br><span class="line">    if (PrivateData-&gt;Fv[Index].FvPpi == OldFfsFvPpi) &#123;</span><br><span class="line">      PrivateData-&gt;Fv[Index].FvPpi = &amp;mPeiFfs2FwVol.Fv;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Locate old build-in Ffs3 EFI_PEI_FIRMWARE_VOLUME_PPI which</span><br><span class="line">  // in flash.</span><br><span class="line">  //</span><br><span class="line">  Status = PeiServicesLocatePpi (</span><br><span class="line">             &amp;gEfiFirmwareFileSystem3Guid,</span><br><span class="line">             0,</span><br><span class="line">             &amp;OldDescriptor,</span><br><span class="line">             &amp;OldFfsFvPpi</span><br><span class="line">             );</span><br><span class="line">  ASSERT_EFI_ERROR (Status);</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Re-install the EFI_PEI_FIRMWARE_VOLUME_PPI for build-in Ffs3</span><br><span class="line">  // which is shadowed from flash to permanent memory within PeiCore image.</span><br><span class="line">  //</span><br><span class="line">  Status = PeiServicesReInstallPpi (OldDescriptor, &amp;mPeiFfs3FvPpiList);</span><br><span class="line">  ASSERT_EFI_ERROR (Status);</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Fixup all FvPpi pointers for the implementation in flash to permanent memory.</span><br><span class="line">  //</span><br><span class="line">  for (Index = 0; Index &lt; PrivateData-&gt;FvCount; Index++) &#123;</span><br><span class="line">    if (PrivateData-&gt;Fv[Index].FvPpi == OldFfsFvPpi) &#123;</span><br><span class="line">      PrivateData-&gt;Fv[Index].FvPpi = &amp;mPeiFfs3FwVol.Fv;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
-
-
+			
 		</div>
 
 		
 		<div class="post-copyright-info w-full my-8 px-2 sm:px-6 md:px-8">
 			<div class="article-copyright-info-container">
     <ul>
-        <li><strong>Title:</strong> PEI phase (2)</li>
+        <li><strong>Title:</strong> PEI Phase (7) PEI 服务3</li>
         <li><strong>Author:</strong> Meteor Liu</li>
         <li><strong>Created at
-                :</strong> 2026-07-29 09:16:39</li>
+                :</strong> 2026-08-04 13:51:00</li>
         
             <li>
                 <strong>Updated at
-                    :</strong> 2026-07-30 09:09:38
+                    :</strong> 2026-08-04 13:51:10
             </li>
         
         <li>
-            <strong>Link:</strong> https://meteorcool.github.io/2026/07/29/PEI-phase-2/
+            <strong>Link:</strong> https://meteorcool.github.io/2026/08/04/PEI-Phase-7-PEI-服务3/
         </li>
         <li>
             <strong>
@@ -588,23 +514,11 @@
 		
 		<div class="article-nav my-8 flex justify-between items-center px-2 sm:px-6 md:px-8">
 			
-			<div class="article-prev border-border-color shadow-redefine-flat shadow-shadow-color-2 rounded-medium px-4 py-2 hover:shadow-redefine-flat-hover hover:shadow-shadow-color-2">
-				<a class="prev" rel="prev" href="/2026/07/30/PEI-Phase-3-PeiDispatcher/">
-					<span class="left arrow-icon flex justify-center items-center">
-						<i class="fa-solid fa-chevron-left"></i>
-					</span>
-					<span class="title flex justify-center items-center">
-						<span class="post-nav-title-item truncate max-w-48">PEI Phase (3) PeiDispatcher 1</span>
-						<span class="post-nav-item">Prev posts</span>
-					</span>
-				</a>
-			</div>
-			
 			
 			<div class="article-next border-border-color shadow-redefine-flat shadow-shadow-color-2 rounded-medium px-4 py-2 hover:shadow-redefine-flat-hover hover:shadow-shadow-color-2">
-				<a class="next" rel="next" href="/2026/07/28/BIOS/BIOS%20Code/PEI/PEI-phase-1/">
+				<a class="next" rel="next" href="/2026/08/04/PEI-Phase-6-PEI-%E6%9C%8D%E5%8A%A12/">
 					<span class="title flex justify-center items-center">
-						<span class="post-nav-title-item truncate max-w-48">PEI phase (1)</span>
+						<span class="post-nav-title-item truncate max-w-48">PEI Phase(6) PEI 服务2</span>
 						<span class="post-nav-item">Next posts</span>
 					</span>
 					<span class="right arrow-icon flex justify-center items-center">
@@ -687,7 +601,7 @@
 		<div class="post-toc-wrap">
 	<div class="post-toc">
 		<div class="toc-title">On this page</div>
-		<div class="page-title">PEI phase (2)</div>
+		<div class="page-title">PEI Phase (7) PEI 服务3</div>
 		
 
 	</div>
