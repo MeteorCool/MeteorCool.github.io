@@ -94,7 +94,7 @@
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://meteorcool.github.io/images/redefine-og.webp">
 <meta property="article:published_time" content="2026-08-03T06:07:47.000Z">
-<meta property="article:modified_time" content="2026-08-03T06:09:54.592Z">
+<meta property="article:modified_time" content="2026-08-04T03:18:37.216Z">
 <meta property="article:author" content="Meteor Liu">
 <meta property="article:tag" content="Code">
 <meta property="article:tag" content="PEI">
@@ -329,7 +329,7 @@
         <div class="label text-third-text-color text-sm">Categories</div>
     </a>
     <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/archives">
-        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">8</div>
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">9</div>
         <div class="label text-third-text-color text-sm">Posts</div>
     </a>
 </div>
@@ -380,8 +380,8 @@
     
         <span class="article-date article-meta-item">
             <i class="fa-regular fa-wrench"></i>&nbsp;
-            <span class="desktop">2026-08-03 14:09:54</span>
-            <span class="mobile">2026-08-03 14:09:54</span>
+            <span class="desktop">2026-08-04 11:18:37</span>
+            <span class="mobile">2026-08-04 11:18:37</span>
             <span class="hover-info">Updated</span>
         </span>
     
@@ -459,7 +459,157 @@
 
 
 		<div class="article-content markdown-body px-2 sm:px-6 md:px-8 pb-8">
-			
+			<p>PEI service 提供了PEI 几乎常用的功能，根据功能不同分为PPI、启动模式、HOB、FV数据空间、内存管理、状态码、系统重启、基本的I&#x2F;O接口及扩展服务，服务定义如下：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-5-PEI-%E6%9C%8D%E5%8A%A11/image-20260804094653598.png"
+                      alt="image-20260804094653598"
+                ></p>
+<p><strong>（1）PeiInstallPpi</strong>，实现在 Ppi\Ppi.c，安装 PPI 服务列表到 PPI 数据库，不同的 PPI 由GUID 唯一标识。</p>
+<p>函数流程如下：<br><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-5-PEI-%E6%9C%8D%E5%8A%A11/image-20260804102202785.png"
+                      alt="image-20260804102202785"
+                ></p>
+<p>函数实现如下：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-5-PEI-%E6%9C%8D%E5%8A%A11/image-20260804095303339.png"
+                      alt="image-20260804095303339"
+                ></p>
+<p>和早期EDK2 版本有差异，通过静态函数 InternalPeiInstallPpi 重构，三个输入参数分别是：</p>
+<p>PeiServices  PEIM 对外拿到的标准PeiServicesTablePointer</p>
+<p>PpiList：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-5-PEI-%E6%9C%8D%E5%8A%A11/image-20260804100041589.png"
+                      alt="image-20260804100041589"
+                ></p>
+<p>关键宏Flags：</p>
+<p><code>EFI_PEI_PPI_DESCRIPTOR_PPI</code>：标记这条是有效 PPI，必须置位</p>
+<p><code>EFI_PEI_PPI_DESCRIPTOR_NOTIFY_CALLBACK</code>：这是 Notify，不是 PPI</p>
+<p><code>EFI_PEI_PPI_DESCRIPTOR_TERMINATE_LIST</code>：链表结束标记</p>
+<p>Single：</p>
+<p><code>FALSE</code>：标准模式，外部 API <code>PeiInstallPpi()</code> 使用，遍历<strong>多条 PPI 链表</strong>，直到遇到 <code>TERMINATE_LIST</code> 标志</p>
+<p><code>TRUE</code>：PEICore 内部调用，只安装<strong>单个 PPI 描述符</strong>，不需要判断结束标记（给 ReinstallPpi、内部动态注册使用）</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-5-PEI-%E6%9C%8D%E5%8A%A11/image-20260804100542040.png"
+                      alt="image-20260804100542040"
+                ></p>
+<p><code> PrivateData = PEI_CORE_INSTANCE_FROM_PS_THIS (PeiServices);</code></p>
+<p>通过PeiServices 指针反向找到PEICORE（peicore 的第一个成员就是peiservices）</p>
+<p>后面则根据拿到的PEICORE 获取相关信息：</p>
+<p><code>PpiListPointer</code> 拿到全局 PPI 数据库管理头；</p>
+<p><code>Index</code>：下一条 PPI 要写入的数组下标；</p>
+<p><code>LastCount = Index</code> <strong>重点！记录本次安装开始前的数量</strong></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-5-PEI-%E6%9C%8D%E5%8A%A11/image-20260804100859969.png"
+                      alt="image-20260804100859969"
+                ></p>
+<p>For循环：遍历整条PPI描述符链表，无退出条件，通过内部break指令退出。</p>
+<p>第一个判断条件，判断当前的PPI 是否合法，不合法则将当前数据库中的数据恢复到最后一次正确执行的状态并返回</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">if (Index &gt;= PpiListPointer-&gt;MaxCount) &#123;</span><br><span class="line">  //</span><br><span class="line">  // Run out of room, grow the buffer.</span><br><span class="line">  //</span><br><span class="line">  TempPtr = AllocateZeroPool (</span><br><span class="line">              sizeof (PEI_PPI_LIST_POINTERS) * (PpiListPointer-&gt;MaxCount + PPI_GROWTH_STEP)</span><br><span class="line">              );</span><br><span class="line">  if (TempPtr == NULL) &#123;</span><br><span class="line">    ASSERT (TempPtr != NULL);</span><br><span class="line">    return EFI_OUT_OF_RESOURCES;</span><br><span class="line">  &#125;</span><br><span class="line">  CopyMem (</span><br><span class="line">    TempPtr,</span><br><span class="line">    PpiListPointer-&gt;PpiPtrs,</span><br><span class="line">    sizeof (PEI_PPI_LIST_POINTERS) * PpiListPointer-&gt;MaxCount</span><br><span class="line">    );</span><br><span class="line">  PpiListPointer-&gt;PpiPtrs  = TempPtr;</span><br><span class="line">  PpiListPointer-&gt;MaxCount = PpiListPointer-&gt;MaxCount + PPI_GROWTH_STEP;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>PEI 全局PPI 在堆上是动态分配内存，当内存不足时，重新扩容，先申请更大的内存（PPI_GROWTH_STEP倍数），复制内容到新内存，修改指针。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">DEBUG ((DEBUG_INFO, &quot;Install PPI: %g\n&quot;, PpiList-&gt;Guid));</span><br><span class="line">PpiListPointer-&gt;PpiPtrs[Index].Ppi = (EFI_PEI_PPI_DESCRIPTOR *)PpiList;</span><br><span class="line">Index++;</span><br><span class="line">PpiListPointer-&gt;CurrentCount++;</span><br><span class="line"></span><br><span class="line">if (Single) &#123;</span><br><span class="line">  //</span><br><span class="line">  // Only single entry in the PpiList.</span><br><span class="line">  //</span><br><span class="line">  break;</span><br><span class="line">&#125; else if ((PpiList-&gt;Flags &amp; EFI_PEI_PPI_DESCRIPTOR_TERMINATE_LIST) ==</span><br><span class="line">           EFI_PEI_PPI_DESCRIPTOR_TERMINATE_LIST)</span><br><span class="line">&#123;</span><br><span class="line">  //</span><br><span class="line">  // Continue until the end of the PPI List.</span><br><span class="line">  //</span><br><span class="line">  break;</span><br><span class="line">&#125;</span><br><span class="line">//</span><br><span class="line">// Go to the next descriptor.</span><br><span class="line">//</span><br><span class="line">PpiList++;</span><br></pre></td></tr></table></figure></div>
+
+<p>将合法 PPI 描述符指针存入全局数组，下标自增，有效计数 + 1。</p>
+<p>if 条件：</p>
+<p><strong>Single &#x3D;&#x3D; TRUE</strong>：只处理当前这一条，直接 break；</p>
+<p><strong>Single &#x3D;&#x3D; FALSE（外部标准调用）</strong>：判断当前描述符是否带有结束标记 <code>TERMINATE_LIST</code>，遇到标记停止循环；</p>
+<p>不满足退出条件：<code>PpiList++</code> 移动到数组下一个描述符，继续循环。</p>
+<p>注意：PEIM 定义多条 PPI 时，最后一条结构体必须添加 <code>EFI_PEI_PPI_DESCRIPTOR_TERMINATE_LIST</code>，否则内存越界遍历</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-5-PEI-%E6%9C%8D%E5%8A%A11/image-20260804102011094.png"
+                      alt="image-20260804102011094"
+                ></p>
+<p>循环完成、所有 PPI 成功写入数据库后，调用 <code>ProcessNotify()</code>，callback 函数。</p>
+<p><strong>（2）PeiReInstallPpi</strong>  替换数据库内已经存在的一条 PPI</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-5-PEI-%E6%9C%8D%E5%8A%A11/image-20260804102540730.png"
+                      alt="image-20260804102540730"
+                ></p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">if ((OldPpi == NULL) || (NewPpi == NULL)) &#123;</span><br><span class="line"> return EFI_INVALID_PARAMETER;</span><br><span class="line">&#125;</span><br><span class="line"> if ((NewPpi-&gt;Flags &amp; EFI_PEI_PPI_DESCRIPTOR_PPI) == 0) &#123;</span><br><span class="line">   return EFI_INVALID_PARAMETER;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>第一个判断条件，新旧PPI不能为空，否则无效，第二个判断条件判断新的PPI 必须合法，和install 安装新的PPI 检查逻辑一致</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">for (Index = 0; Index &lt; PrivateData-&gt;PpiData.PpiList.CurrentCount; Index++) &#123;</span><br><span class="line">  if (OldPpi == PrivateData-&gt;PpiData.PpiList.PpiPtrs[Index].Ppi) &#123;</span><br><span class="line">    break;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">if (Index == PrivateData-&gt;PpiData.PpiList.CurrentCount) &#123;</span><br><span class="line">  return EFI_NOT_FOUND;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>遍历整个PPI 数组，查找旧的PPI 是否存在，不存在则返回找不到，和install 不同的是，install 的动作是直接在数据尾部新增变量，但reinstall 是需要找到旧的PPI精准地址进行更换</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">PrivateData-&gt;PpiData.PpiList.PpiPtrs[Index].Ppi = (EFI_PEI_PPI_DESCRIPTOR *)NewPpi;</span><br></pre></td></tr></table></figure></div>
+
+<p>新的PPI指针覆盖旧的。</p>
+<p>最后执行的notify则是执行同步 Notify 回调。输入变量index，index+1则是单独指向被替换的PPI。</p>
+<p><strong>（3）PeiLocatePpi</strong>    在 PEI 全局 PPI 数据库中，根据 GUID 查找指定序号的 PPI 实例，我们在调用PPI之前都必须找到相对应的实例，一般是通过这个函数实现</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-5-PEI-%E6%9C%8D%E5%8A%A11/image-20260804103431670.png"
+                      alt="image-20260804103431670"
+                ></p>
+<p>for 循环：</p>
+<p>从头到尾线性遍历全部已注册 PPI；</p>
+<p><code>TempPtr</code> 取出数组里保存的 <code>EFI_PEI_PPI_DESCRIPTOR*</code>；</p>
+<p><code>CheckGuid</code> 拿到该 PPI 描述符对应的 GUID。</p>
+<p>核对guid，核对通过则判断输入的instance&#x3D; 0？，知道找到第一个实例。</p>
+<p><strong>（4）PeiNotifyPpi</strong>  注册PPI callback，向 PEI Core 注册一组 Notify 监听：当<strong>将来某个 PPI 通过 InstallPpi &#x2F; ReinstallPpi 安装成功时</strong>，自动触发你注册的 NotifyFunction。</p>
+<p>整体流程图</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-5-PEI-%E6%9C%8D%E5%8A%A11/image-20260804111546305.png"
+                      alt="image-20260804111546305"
+                ></p>
+<p>代码实现：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-5-PEI-%E6%9C%8D%E5%8A%A11/image-20260804105325476.png"
+                      alt="image-20260804105325476"
+                ></p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br></pre></td><td class="code"><pre><span class="line">EFI_STATUS</span><br><span class="line">InternalPeiNotifyPpi (</span><br><span class="line">  IN CONST EFI_PEI_SERVICES           **PeiServices,</span><br><span class="line">  IN CONST EFI_PEI_NOTIFY_DESCRIPTOR  *NotifyList,</span><br><span class="line">  IN BOOLEAN                          Single</span><br><span class="line">  )</span><br><span class="line">&#123;</span><br><span class="line">  PEI_CORE_INSTANCE         *PrivateData;</span><br><span class="line">  PEI_CALLBACK_NOTIFY_LIST  *CallbackNotifyListPointer;</span><br><span class="line">  UINTN                     CallbackNotifyIndex;</span><br><span class="line">  UINTN                     LastCallbackNotifyCount;</span><br><span class="line">  PEI_DISPATCH_NOTIFY_LIST  *DispatchNotifyListPointer;</span><br><span class="line">  UINTN                     DispatchNotifyIndex;</span><br><span class="line">  UINTN                     LastDispatchNotifyCount;</span><br><span class="line">  VOID                      *TempPtr;</span><br><span class="line"></span><br><span class="line">  if (NotifyList == NULL) &#123;</span><br><span class="line">    return EFI_INVALID_PARAMETER;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  PrivateData = PEI_CORE_INSTANCE_FROM_PS_THIS (PeiServices);</span><br><span class="line"></span><br><span class="line">  CallbackNotifyListPointer = &amp;PrivateData-&gt;PpiData.CallbackNotifyList;</span><br><span class="line">  CallbackNotifyIndex       = CallbackNotifyListPointer-&gt;CurrentCount;</span><br><span class="line">  LastCallbackNotifyCount   = CallbackNotifyIndex;</span><br><span class="line"></span><br><span class="line">  DispatchNotifyListPointer = &amp;PrivateData-&gt;PpiData.DispatchNotifyList;</span><br><span class="line">  DispatchNotifyIndex       = DispatchNotifyListPointer-&gt;CurrentCount;</span><br><span class="line">  LastDispatchNotifyCount   = DispatchNotifyIndex;</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // This is loop installs all Notify descriptors in the NotifyList.  It is</span><br><span class="line">  // terminated by the EFI_PEI_PPI_DESCRIPTOR_TERMINATE_LIST being set in the last</span><br><span class="line">  // EFI_PEI_NOTIFY_DESCRIPTOR in the list.</span><br><span class="line">  //</span><br><span class="line"></span><br><span class="line">  for ( ; ;) &#123;</span><br><span class="line">    //</span><br><span class="line">    // If some of the PPI data is invalid restore original Notify PPI database value</span><br><span class="line">    //</span><br><span class="line">    if ((NotifyList-&gt;Flags &amp; EFI_PEI_PPI_DESCRIPTOR_NOTIFY_TYPES) == 0) &#123;</span><br><span class="line">      CallbackNotifyListPointer-&gt;CurrentCount = LastCallbackNotifyCount;</span><br><span class="line">      DispatchNotifyListPointer-&gt;CurrentCount = LastDispatchNotifyCount;</span><br><span class="line">      DEBUG ((DEBUG_ERROR, &quot;ERROR -&gt; NotifyPpi: %g %p\n&quot;, NotifyList-&gt;Guid, NotifyList-&gt;Notify));</span><br><span class="line">      return EFI_INVALID_PARAMETER;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    if ((NotifyList-&gt;Flags &amp; EFI_PEI_PPI_DESCRIPTOR_NOTIFY_CALLBACK) != 0) &#123;</span><br><span class="line">      if (CallbackNotifyIndex &gt;= CallbackNotifyListPointer-&gt;MaxCount) &#123;</span><br><span class="line">        //</span><br><span class="line">        // Run out of room, grow the buffer.</span><br><span class="line">        //</span><br><span class="line">        TempPtr = AllocateZeroPool (</span><br><span class="line">                    sizeof (PEI_PPI_LIST_POINTERS) * (CallbackNotifyListPointer-&gt;MaxCount + CALLBACK_NOTIFY_GROWTH_STEP)</span><br><span class="line">                    );</span><br><span class="line">        if (TempPtr == NULL) &#123;</span><br><span class="line">          ASSERT (TempPtr != NULL);</span><br><span class="line">          return EFI_OUT_OF_RESOURCES;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        CopyMem (</span><br><span class="line">          TempPtr,</span><br><span class="line">          CallbackNotifyListPointer-&gt;NotifyPtrs,</span><br><span class="line">          sizeof (PEI_PPI_LIST_POINTERS) * CallbackNotifyListPointer-&gt;MaxCount</span><br><span class="line">          );</span><br><span class="line">        CallbackNotifyListPointer-&gt;NotifyPtrs = TempPtr;</span><br><span class="line">        CallbackNotifyListPointer-&gt;MaxCount   = CallbackNotifyListPointer-&gt;MaxCount + CALLBACK_NOTIFY_GROWTH_STEP;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      CallbackNotifyListPointer-&gt;NotifyPtrs[CallbackNotifyIndex].Notify = (EFI_PEI_NOTIFY_DESCRIPTOR *)NotifyList;</span><br><span class="line">      CallbackNotifyIndex++;</span><br><span class="line">      CallbackNotifyListPointer-&gt;CurrentCount++;</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">      if (DispatchNotifyIndex &gt;= DispatchNotifyListPointer-&gt;MaxCount) &#123;</span><br><span class="line">        //</span><br><span class="line">        // Run out of room, grow the buffer.</span><br><span class="line">        //</span><br><span class="line">        TempPtr = AllocateZeroPool (</span><br><span class="line">                    sizeof (PEI_PPI_LIST_POINTERS) * (DispatchNotifyListPointer-&gt;MaxCount + DISPATCH_NOTIFY_GROWTH_STEP)</span><br><span class="line">                    );</span><br><span class="line">        if (TempPtr == NULL) &#123;</span><br><span class="line">          ASSERT (TempPtr != NULL);</span><br><span class="line">          return EFI_OUT_OF_RESOURCES;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        CopyMem (</span><br><span class="line">          TempPtr,</span><br><span class="line">          DispatchNotifyListPointer-&gt;NotifyPtrs,</span><br><span class="line">          sizeof (PEI_PPI_LIST_POINTERS) * DispatchNotifyListPointer-&gt;MaxCount</span><br><span class="line">          );</span><br><span class="line">        DispatchNotifyListPointer-&gt;NotifyPtrs = TempPtr;</span><br><span class="line">        DispatchNotifyListPointer-&gt;MaxCount   = DispatchNotifyListPointer-&gt;MaxCount + DISPATCH_NOTIFY_GROWTH_STEP;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      DispatchNotifyListPointer-&gt;NotifyPtrs[DispatchNotifyIndex].Notify = (EFI_PEI_NOTIFY_DESCRIPTOR *)NotifyList;</span><br><span class="line">      DispatchNotifyIndex++;</span><br><span class="line">      DispatchNotifyListPointer-&gt;CurrentCount++;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    DEBUG ((DEBUG_INFO, &quot;Register PPI Notify: %g\n&quot;, NotifyList-&gt;Guid));</span><br><span class="line"></span><br><span class="line">    if (Single) &#123;</span><br><span class="line">      //</span><br><span class="line">      // Only single entry in the NotifyList.</span><br><span class="line">      //</span><br><span class="line">      break;</span><br><span class="line">    &#125; else if ((NotifyList-&gt;Flags &amp; EFI_PEI_PPI_DESCRIPTOR_TERMINATE_LIST) ==</span><br><span class="line">               EFI_PEI_PPI_DESCRIPTOR_TERMINATE_LIST)</span><br><span class="line">    &#123;</span><br><span class="line">      //</span><br><span class="line">      // Continue until the end of the Notify List.</span><br><span class="line">      //</span><br><span class="line">      break;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    //</span><br><span class="line">    // Go to the next descriptor.</span><br><span class="line">    //</span><br><span class="line">    NotifyList++;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Process any callback level notifies for all previously installed PPIs.</span><br><span class="line">  //</span><br><span class="line">  ProcessNotify (</span><br><span class="line">    PrivateData,</span><br><span class="line">    EFI_PEI_PPI_DESCRIPTOR_NOTIFY_CALLBACK,</span><br><span class="line">    0,</span><br><span class="line">    PrivateData-&gt;PpiData.PpiList.CurrentCount,</span><br><span class="line">    LastCallbackNotifyCount,</span><br><span class="line">    CallbackNotifyListPointer-&gt;CurrentCount</span><br><span class="line">    );</span><br><span class="line"></span><br><span class="line">  return EFI_SUCCESS;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>代码架构逻辑和install差不多，通过single 变量确定单独还是批量调用PPI。</p>
+<p>定义了两组不同的数组PEI_CALLBACK_NOTIFY_LIST 和 PEI_DISPATCH_NOTIFY_LIST，NOTIFY_CALLBACK 存入 CallbackNotifyList</p>
+<p>NOTIFY_DISPATCH存入 DispatchNotifyList，后续触发逻辑完全隔离。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">PrivateData = PEI_CORE_INSTANCE_FROM_PS_THIS (PeiServices);</span><br><span class="line"></span><br><span class="line">CallbackNotifyListPointer = &amp;PrivateData-&gt;PpiData.CallbackNotifyList;</span><br><span class="line">CallbackNotifyIndex       = CallbackNotifyListPointer-&gt;CurrentCount;</span><br><span class="line">LastCallbackNotifyCount   = CallbackNotifyIndex;</span><br><span class="line"></span><br><span class="line">DispatchNotifyListPointer = &amp;PrivateData-&gt;PpiData.DispatchNotifyList;</span><br><span class="line">DispatchNotifyIndex       = DispatchNotifyListPointer-&gt;CurrentCount;</span><br><span class="line">LastDispatchNotifyCount   = DispatchNotifyIndex;</span><br></pre></td></tr></table></figure></div>
+
+<p>经典容器反向寻址，获取 PEI 全局上下文，访问两套 Notify 全局数组。</p>
+<p>for 循环无限循环通过break 指令退出，遍历整条NotifyList数组。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">if ((NotifyList-&gt;Flags &amp; EFI_PEI_PPI_DESCRIPTOR_NOTIFY_TYPES) == 0) &#123;</span><br><span class="line">  CallbackNotifyListPointer-&gt;CurrentCount = LastCallbackNotifyCount;</span><br><span class="line">  DispatchNotifyListPointer-&gt;CurrentCount = LastDispatchNotifyCount;</span><br><span class="line">  DEBUG ((DEBUG_ERROR, &quot;ERROR -&gt; NotifyPpi: %g %p\n&quot;, NotifyList-&gt;Guid, NotifyList-&gt;Notify));</span><br><span class="line">  return EFI_INVALID_PARAMETER;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>Notify 描述符 Flags 必须至少带有 <code>NOTIFY_CALLBACK</code> &#x2F; <code>NOTIFY_DISPATCH</code> 二者其一。</p>
+<p>校验失败：<strong>事务回滚</strong>，恢复两套 Notify 数组有效计数，直接返回错误。</p>
+<p>后面则是notify的扩容动作，和install 的逻辑一致，扩容完成则重新更新内存和指针。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">if (Single) &#123;</span><br><span class="line">  //</span><br><span class="line">  // Only single entry in the NotifyList.</span><br><span class="line">  //</span><br><span class="line">  break;</span><br><span class="line">&#125; else if ((NotifyList-&gt;Flags &amp; EFI_PEI_PPI_DESCRIPTOR_TERMINATE_LIST) ==</span><br><span class="line">           EFI_PEI_PPI_DESCRIPTOR_TERMINATE_LIST)</span><br><span class="line">&#123;</span><br><span class="line">  //</span><br><span class="line">  // Continue until the end of the Notify List.</span><br><span class="line">  //</span><br><span class="line">  break;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>循环退出逻辑，和 InstallPpi 完全对称：</p>
+<ol>
+<li>Single&#x3D;TRUE：仅单条，直接退出；</li>
+<li>Single&#x3D;FALSE：判断是否遇到链表结束标记；</li>
+<li>未满足退出条件，指针自增访问下一条 Notify 描述符。</li>
+</ol>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">ProcessNotify (</span><br><span class="line">  PrivateData,</span><br><span class="line">  EFI_PEI_PPI_DESCRIPTOR_NOTIFY_CALLBACK,</span><br><span class="line">  0,</span><br><span class="line">  PrivateData-&gt;PpiData.PpiList.CurrentCount,</span><br><span class="line">  LastCallbackNotifyCount,</span><br><span class="line">  CallbackNotifyListPointer-&gt;CurrentCount</span><br><span class="line">  );</span><br></pre></td></tr></table></figure></div>
+
+<p>注册后调用notify，当PPI 调用notifyPPI 时，如果目标PPI 已经安装完成，不会等到后面installPPI，会立刻触发本次callback。</p>
+<blockquote>
+<p><strong>对比 InstallPpi 内部的 ProcessNotify：</strong></p>
+<p>InternalPeiInstallPpi        PPI 新增完成，扫描<strong>所有旧 Notify</strong>，匹配<strong>新增的 PPI</strong>；</p>
+<p>InternalPeiNotifyPpi       Notify 新增完成，扫描<strong>所有旧 PPI</strong>，匹配<strong>新增的 Notify</strong>；</p>
+<p>二者互补，保证无论「先装 PPI 还是先注册 Notify」，回调都能正常触发。</p>
+</blockquote>
+
 		</div>
 
 		
@@ -473,7 +623,7 @@
         
             <li>
                 <strong>Updated at
-                    :</strong> 2026-08-03 14:09:54
+                    :</strong> 2026-08-04 11:18:37
             </li>
         
         <li>
@@ -513,6 +663,18 @@
 
 		
 		<div class="article-nav my-8 flex justify-between items-center px-2 sm:px-6 md:px-8">
+			
+			<div class="article-prev border-border-color shadow-redefine-flat shadow-shadow-color-2 rounded-medium px-4 py-2 hover:shadow-redefine-flat-hover hover:shadow-shadow-color-2">
+				<a class="prev" rel="prev" href="/2026/08/04/PEI-Phase-6-PEI-%E6%9C%8D%E5%8A%A12/">
+					<span class="left arrow-icon flex justify-center items-center">
+						<i class="fa-solid fa-chevron-left"></i>
+					</span>
+					<span class="title flex justify-center items-center">
+						<span class="post-nav-title-item truncate max-w-48">PEI Phase(6) PEI 服务2</span>
+						<span class="post-nav-item">Prev posts</span>
+					</span>
+				</a>
+			</div>
 			
 			
 			<div class="article-next border-border-color shadow-redefine-flat shadow-shadow-color-2 rounded-medium px-4 py-2 hover:shadow-redefine-flat-hover hover:shadow-shadow-color-2">
@@ -630,7 +792,7 @@
                 
                 <p class="post-count space-x-0.5">
                     <span>
-                        8 posts in total
+                        9 posts in total
                     </span>
                     
                 </p>
