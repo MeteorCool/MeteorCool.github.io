@@ -94,7 +94,7 @@
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://meteorcool.github.io/images/redefine-og.webp">
 <meta property="article:published_time" content="2026-08-04T05:51:00.000Z">
-<meta property="article:modified_time" content="2026-08-04T05:51:10.453Z">
+<meta property="article:modified_time" content="2026-08-05T06:08:12.106Z">
 <meta property="article:author" content="Meteor Liu">
 <meta property="article:tag" content="Code">
 <meta property="article:tag" content="PEI">
@@ -321,15 +321,15 @@
 
         <div class="statistics flex justify-around my-2.5">
     <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/tags">
-        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">8</div>
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">10</div>
         <div class="label text-third-text-color text-sm">Tags</div>
     </a>
     <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/categories">
-        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">6</div>
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">8</div>
         <div class="label text-third-text-color text-sm">Categories</div>
     </a>
     <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/archives">
-        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">10</div>
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">12</div>
         <div class="label text-third-text-color text-sm">Posts</div>
     </a>
 </div>
@@ -380,8 +380,8 @@
     
         <span class="article-date article-meta-item">
             <i class="fa-regular fa-wrench"></i>&nbsp;
-            <span class="desktop">2026-08-04 13:51:10</span>
-            <span class="mobile">2026-08-04 13:51:10</span>
+            <span class="desktop">2026-08-05 14:08:12</span>
+            <span class="mobile">2026-08-05 14:08:12</span>
             <span class="hover-info">Updated</span>
         </span>
     
@@ -459,7 +459,292 @@
 
 
 		<div class="article-content markdown-body px-2 sm:px-6 md:px-8 pb-8">
-			
+			<p>​    内存服务</p>
+<p><strong>PeiInstallPeiMemory</strong>    安装 PEI 阶段可用的内存空间。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-7-PEI-%E6%9C%8D%E5%8A%A13/image-20260805100450084.png"
+                      alt="image-20260805100450084"
+                ></p>
+<p>安装 PEI 阶段可用的永久内存，此服务最多使用一次，不支持内存的多次安装。输入参数是 PEI 服务指针及永久内存的起始地址及大小，返回值是安装成功的状态值。</p>
+<p>还是通过PEI_CORE_INSTANCE_FROM_PS_THIS 函数，通过PeiServices反向找到peicore 得数据结构</p>
+<p>判断内存是否安装，如果永久内存已经安装，则不能再次安装，否则系统无法正确处理。 </p>
+<p>记录永久内存的起始地址及大小，PeiCore 将用安装的永久内存作为系统内存进行维护。 设置内存标记，表明系统内存已经安装，函数的运行栈空间需要切换到内存空间。</p>
+<p>参考PI SPEC 1.9 III-4.3，PEI 内存分配如图：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-7-PEI-%E6%9C%8D%E5%8A%A13/image-20260805101127825.png"
+                      alt="image-20260805101127825"
+                ></p>
+<p><strong>PeiAllocatePages</strong>     ，分配 PEI 管理的内存空间，以页为单位申请。此服务只有在内存空间被安装以后才可以使用。 </p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br></pre></td><td class="code"><pre><span class="line">EFI_STATUS</span><br><span class="line">EFIAPI</span><br><span class="line">PeiAllocatePages (</span><br><span class="line">  IN CONST EFI_PEI_SERVICES      **PeiServices,</span><br><span class="line">  IN       EFI_MEMORY_TYPE       MemoryType,</span><br><span class="line">  IN       UINTN                 Pages,</span><br><span class="line">  OUT      EFI_PHYSICAL_ADDRESS  *Memory</span><br><span class="line">  )</span><br><span class="line">&#123;</span><br><span class="line">  EFI_STATUS            Status;</span><br><span class="line">  PEI_CORE_INSTANCE     *PrivateData;</span><br><span class="line">  EFI_PEI_HOB_POINTERS  Hob;</span><br><span class="line">  EFI_PHYSICAL_ADDRESS  *FreeMemoryTop;</span><br><span class="line">  EFI_PHYSICAL_ADDRESS  *FreeMemoryBottom;</span><br><span class="line">  UINTN                 RemainingPages;</span><br><span class="line">  UINTN                 RemainingMemory;</span><br><span class="line">  UINTN                 Granularity;</span><br><span class="line">  UINTN                 Padding;</span><br><span class="line">  UINTN                 Index;</span><br><span class="line"></span><br><span class="line">  if ((MemoryType != EfiLoaderCode) &amp;&amp;</span><br><span class="line">      (MemoryType != EfiLoaderData) &amp;&amp;</span><br><span class="line">      (MemoryType != EfiRuntimeServicesCode) &amp;&amp;</span><br><span class="line">      (MemoryType != EfiRuntimeServicesData) &amp;&amp;</span><br><span class="line">      (MemoryType != EfiBootServicesCode) &amp;&amp;</span><br><span class="line">      (MemoryType != EfiBootServicesData) &amp;&amp;</span><br><span class="line">      (MemoryType != EfiACPIReclaimMemory) &amp;&amp;</span><br><span class="line">      (MemoryType != EfiReservedMemoryType) &amp;&amp;</span><br><span class="line">      (MemoryType != EfiACPIMemoryNVS))</span><br><span class="line">  &#123;</span><br><span class="line">    return EFI_INVALID_PARAMETER;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  RemainingPages = 0;</span><br><span class="line"></span><br><span class="line">  Granularity = DEFAULT_PAGE_ALLOCATION_GRANULARITY;</span><br><span class="line"></span><br><span class="line">  PrivateData = PEI_CORE_INSTANCE_FROM_PS_THIS (PeiServices);</span><br><span class="line">  Hob.Raw     = PrivateData-&gt;HobList.Raw;</span><br><span class="line"></span><br><span class="line">  if (Hob.Raw == NULL) &#123;</span><br><span class="line">    //</span><br><span class="line">    // HOB is not initialized yet.</span><br><span class="line">    //</span><br><span class="line">    return EFI_NOT_AVAILABLE_YET;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  if ((RUNTIME_PAGE_ALLOCATION_GRANULARITY &gt; DEFAULT_PAGE_ALLOCATION_GRANULARITY) &amp;&amp;</span><br><span class="line">      ((MemoryType == EfiReservedMemoryType) ||</span><br><span class="line">       (MemoryType == EfiACPIMemoryNVS) ||</span><br><span class="line">       (MemoryType == EfiRuntimeServicesCode) ||</span><br><span class="line">       (MemoryType == EfiRuntimeServicesData)))</span><br><span class="line">  &#123;</span><br><span class="line">    Granularity = RUNTIME_PAGE_ALLOCATION_GRANULARITY;</span><br><span class="line"></span><br><span class="line">    DEBUG ((</span><br><span class="line">      DEBUG_INFO,</span><br><span class="line">      &quot;AllocatePages: aligning allocation to %d KB\n&quot;,</span><br><span class="line">      Granularity / SIZE_1KB</span><br><span class="line">      ));</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  if (!PrivateData-&gt;PeiMemoryInstalled &amp;&amp; PrivateData-&gt;SwitchStackSignal) &#123;</span><br><span class="line">    //</span><br><span class="line">    // When PeiInstallMemory is called but temporary memory has *not* been moved to permanent memory,</span><br><span class="line">    // the AllocatePage will depend on the field of PEI_CORE_INSTANCE structure.</span><br><span class="line">    //</span><br><span class="line">    FreeMemoryTop    = &amp;(PrivateData-&gt;FreePhysicalMemoryTop);</span><br><span class="line">    FreeMemoryBottom = &amp;(PrivateData-&gt;PhysicalMemoryBegin);</span><br><span class="line">  &#125; else &#123;</span><br><span class="line">    // if we are in permanent memory and have memory bins, we need to respect them. A maximum address</span><br><span class="line">    // of 0 means the memory type is using the default bin, which is the PHIT here.</span><br><span class="line">    if (PrivateData-&gt;MemoryTypeInformationInitialized &amp;&amp; (PrivateData-&gt;MemoryTypeStatistics[MemoryType].MaximumAddress != 0)) &#123;</span><br><span class="line">      FreeMemoryTop    = &amp;(PrivateData-&gt;MemoryTypeStatistics[MemoryType].MaximumAddress);</span><br><span class="line">      FreeMemoryBottom = &amp;(PrivateData-&gt;MemoryTypeStatistics[MemoryType].BaseAddress);</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">      FreeMemoryTop    = &amp;(Hob.HandoffInformationTable-&gt;EfiFreeMemoryTop);</span><br><span class="line">      FreeMemoryBottom = &amp;(Hob.HandoffInformationTable-&gt;EfiFreeMemoryBottom);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // We will attempt up to two times here.</span><br><span class="line">  // If we don&#x27;t have memory bins, we will only attempt to allocate from the PHIT.</span><br><span class="line">  // If we have memory bins, we&#x27;ll attempt to allocate from the appropriate bin first. If that fails we&#x27;ll try</span><br><span class="line">  // allocating from the PHIT.</span><br><span class="line">  //</span><br><span class="line">  // If allocating from the PHIT fails in either case, we&#x27;ll then search memory allocation HOBs for free memory.</span><br><span class="line">  //</span><br><span class="line">  for (Index = 0; Index &lt; 2; Index++) &#123;</span><br><span class="line">    //</span><br><span class="line">    // Check to see if on correct boundary for the memory type.</span><br><span class="line">    // If not aligned, make the allocation aligned and that we are not trying to allocate page 0, which is used for</span><br><span class="line">    // null detection.</span><br><span class="line">    //</span><br><span class="line">    Padding = *(FreeMemoryTop) &amp; (Granularity - 1);</span><br><span class="line">    if (((UINTN)(*FreeMemoryTop - *FreeMemoryBottom) &lt; Padding) || (*(FreeMemoryTop) - Padding == 0)) &#123;</span><br><span class="line">      if ((Index == 0) &amp;&amp; PrivateData-&gt;MemoryTypeInformationInitialized &amp;&amp; (PrivateData-&gt;MemoryTypeStatistics[MemoryType].MaximumAddress != 0)) &#123;</span><br><span class="line">        //</span><br><span class="line">        // Try the default bin before searching memory allocation HOBs</span><br><span class="line">        //</span><br><span class="line">        FreeMemoryTop    = &amp;(Hob.HandoffInformationTable-&gt;EfiFreeMemoryTop);</span><br><span class="line">        FreeMemoryBottom = &amp;(Hob.HandoffInformationTable-&gt;EfiFreeMemoryBottom);</span><br><span class="line">        continue;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      goto NotEnoughFreeMemory;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    *(FreeMemoryTop) -= Padding;</span><br><span class="line">    if (Padding &gt;= EFI_PAGE_SIZE) &#123;</span><br><span class="line">      //</span><br><span class="line">      // Create a memory allocation HOB to cover</span><br><span class="line">      // the pages that we will lose to rounding</span><br><span class="line">      //</span><br><span class="line">      InternalBuildMemoryAllocationHob (</span><br><span class="line">        PeiServices,</span><br><span class="line">        *(FreeMemoryTop),</span><br><span class="line">        Padding &amp; ~(UINTN)EFI_PAGE_MASK,</span><br><span class="line">        EfiConventionalMemory</span><br><span class="line">        );</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    //</span><br><span class="line">    // Verify that there is sufficient memory to satisfy the allocation.</span><br><span class="line">    //</span><br><span class="line">    RemainingMemory = (UINTN)(*FreeMemoryTop - *FreeMemoryBottom);</span><br><span class="line">    RemainingPages  = (UINTN)(RShiftU64 (RemainingMemory, EFI_PAGE_SHIFT));</span><br><span class="line">    //</span><br><span class="line">    // The number of remaining pages needs to be greater than or equal to that of</span><br><span class="line">    // the request pages. In addition, there should be enough space left to hold a</span><br><span class="line">    // Memory Allocation HOB.</span><br><span class="line">    //</span><br><span class="line">    Pages = ALIGN_VALUE (Pages, EFI_SIZE_TO_PAGES (Granularity));</span><br><span class="line">    if ((RemainingPages &gt; Pages) ||</span><br><span class="line">        ((RemainingPages == Pages) &amp;&amp;</span><br><span class="line">         ((RemainingMemory &amp; EFI_PAGE_MASK) &gt;= sizeof (EFI_HOB_MEMORY_ALLOCATION))))</span><br><span class="line">    &#123;</span><br><span class="line">      //</span><br><span class="line">      // Update the PHIT to reflect the memory usage</span><br><span class="line">      //</span><br><span class="line">      *(FreeMemoryTop) -= Pages * EFI_PAGE_SIZE;</span><br><span class="line"></span><br><span class="line">      //</span><br><span class="line">      // Update the value for the caller</span><br><span class="line">      //</span><br><span class="line">      *Memory = *(FreeMemoryTop);</span><br><span class="line"></span><br><span class="line">      //</span><br><span class="line">      // Create a memory allocation HOB.</span><br><span class="line">      //</span><br><span class="line">      InternalBuildMemoryAllocationHob (</span><br><span class="line">        PeiServices,</span><br><span class="line">        *(FreeMemoryTop),</span><br><span class="line">        Pages * EFI_PAGE_SIZE,</span><br><span class="line">        MemoryType</span><br><span class="line">        );</span><br><span class="line"></span><br><span class="line">      return EFI_SUCCESS;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // If this was the first allocation attempt, we are using memory bins, and this memory type lands in a bin,</span><br><span class="line">    // retry allocation but target the PHIT free region.</span><br><span class="line">    if ((Index == 0) &amp;&amp; PrivateData-&gt;MemoryTypeInformationInitialized &amp;&amp; (PrivateData-&gt;MemoryTypeStatistics[MemoryType].MaximumAddress != 0)) &#123;</span><br><span class="line">      //</span><br><span class="line">      // Try to the default bin before searching memory allocation HOBs</span><br><span class="line">      //</span><br><span class="line">      FreeMemoryTop    = &amp;(Hob.HandoffInformationTable-&gt;EfiFreeMemoryTop);</span><br><span class="line">      FreeMemoryBottom = &amp;(Hob.HandoffInformationTable-&gt;EfiFreeMemoryBottom);</span><br><span class="line">      continue;</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">      goto NotEnoughFreeMemory;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">NotEnoughFreeMemory:</span><br><span class="line">  //</span><br><span class="line">  // Try to find free memory by searching memory allocation HOBs.</span><br><span class="line">  //</span><br><span class="line">  Status = FindFreeMemoryFromMemoryAllocationHob ((CONST EFI_PEI_SERVICES **)PeiServices, MemoryType, Pages, Granularity, Memory);</span><br><span class="line">  if (!EFI_ERROR (Status)) &#123;</span><br><span class="line">    return Status;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  DEBUG ((DEBUG_ERROR, &quot;AllocatePages failed: No 0x%lx Pages is available.\n&quot;, (UINT64)Pages));</span><br><span class="line">  DEBUG ((DEBUG_ERROR, &quot;There is only left 0x%lx pages memory resource to be allocated.\n&quot;, (UINT64)RemainingPages));</span><br><span class="line">  return EFI_OUT_OF_RESOURCES;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>以页为基本单元申请内存空间，一页默认为4kb内存，通常申请大段的内存空间会用到此服务。它只有在系统内存被安装以后才可以使用，这是因为临时内存没有足够的空间.</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">if ((MemoryType != EfiLoaderCode) &amp;&amp;</span><br><span class="line">    (MemoryType != EfiLoaderData) &amp;&amp;</span><br><span class="line">    (MemoryType != EfiRuntimeServicesCode) &amp;&amp;</span><br><span class="line">    (MemoryType != EfiRuntimeServicesData) &amp;&amp;</span><br><span class="line">    (MemoryType != EfiBootServicesCode) &amp;&amp;</span><br><span class="line">    (MemoryType != EfiBootServicesData) &amp;&amp;</span><br><span class="line">    (MemoryType != EfiACPIReclaimMemory) &amp;&amp;</span><br><span class="line">    (MemoryType != EfiReservedMemoryType) &amp;&amp;</span><br><span class="line">    (MemoryType != EfiACPIMemoryNVS))</span><br><span class="line">&#123;</span><br><span class="line">  return EFI_INVALID_PARAMETER;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>对内存类型进行检查，只支持所列的内存类型。如果是不支持的内存类型，则返回不合法的状态值。 </p>
+<p>像 EfiConventionalMemory(普通可用内存)不能通过该接口申请，直接返回参数非法，因为常规可用内存由 PHIT 管理，AllocatePages 专门用于启动阶段专用类型内存。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">if (Hob.Raw == NULL) &#123;</span><br><span class="line">  // HOB is not initialized yet.</span><br><span class="line">  return EFI_NOT_AVAILABLE_YET;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>HOB 链表为空 &#x3D; PEI 环境还没初始化完成内存资源，分配接口暂不可用，返回 <code>EFI_NOT_AVAILABLE_YET</code>。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">if ((RUNTIME_PAGE_ALLOCATION_GRANULARITY &gt; DEFAULT_PAGE_ALLOCATION_GRANULARITY) &amp;&amp;</span><br><span class="line">    ((MemoryType == EfiReservedMemoryType) ||</span><br><span class="line">     (MemoryType == EfiACPIMemoryNVS) ||</span><br><span class="line">     (MemoryType == EfiRuntimeServicesCode) ||</span><br><span class="line">     (MemoryType == EfiRuntimeServicesData)))</span><br><span class="line">&#123;</span><br><span class="line">  Granularity = RUNTIME_PAGE_ALLOCATION_GRANULARITY;</span><br><span class="line"></span><br><span class="line">  DEBUG ((</span><br><span class="line">    DEBUG_INFO,</span><br><span class="line">    &quot;AllocatePages: aligning allocation to %d KB\n&quot;,</span><br><span class="line">    Granularity / SIZE_1KB</span><br><span class="line">    ));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>Runtime 运行时服务内存、ACPI‑NVS、保留内存<strong>要求更大的硬件对齐粒度</strong>（常见 64KB &#x2F; 1MB），适配 MMU、缓存属性、运行时虚拟地址映射约束。当申请上述内存则需要变更默认对齐粒度大小(一页大小)。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">if (!PrivateData-&gt;PeiMemoryInstalled &amp;&amp; PrivateData-&gt;SwitchStackSignal) &#123;</span><br><span class="line">  //</span><br><span class="line">  // When PeiInstallMemory is called but temporary memory has *not* been moved to permanent memory,</span><br><span class="line">  // the AllocatePage will depend on the field of PEI_CORE_INSTANCE structure.</span><br><span class="line">  //</span><br><span class="line">  FreeMemoryTop    = &amp;(PrivateData-&gt;FreePhysicalMemoryTop);</span><br><span class="line">  FreeMemoryBottom = &amp;(PrivateData-&gt;PhysicalMemoryBegin);</span><br><span class="line">&#125; else &#123;</span><br><span class="line">  // if we are in permanent memory and have memory bins, we need to respect them. A maximum address</span><br><span class="line">  // of 0 means the memory type is using the default bin, which is the PHIT here.</span><br><span class="line">  if (PrivateData-&gt;MemoryTypeInformationInitialized &amp;&amp; (PrivateData-&gt;MemoryTypeStatistics[MemoryType].MaximumAddress != 0)) &#123;</span><br><span class="line">    FreeMemoryTop    = &amp;(PrivateData-&gt;MemoryTypeStatistics[MemoryType].MaximumAddress);</span><br><span class="line">    FreeMemoryBottom = &amp;(PrivateData-&gt;MemoryTypeStatistics[MemoryType].BaseAddress);</span><br><span class="line">  &#125; else &#123;</span><br><span class="line">    FreeMemoryTop    = &amp;(Hob.HandoffInformationTable-&gt;EfiFreeMemoryTop);</span><br><span class="line">    FreeMemoryBottom = &amp;(Hob.HandoffInformationTable-&gt;EfiFreeMemoryBottom);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<ol>
+<li><p><strong>分支 1：临时内存 (TempRam) 阶段</strong></p>
+<ul>
+<li><code>PeiMemoryInstalled = false</code>：永久内存还没安装；</li>
+<li><code>SwitchStackSignal = true</code>：已经从临时栈切换；</li>
+<li>空闲内存取自 PEI 内核实例内保存的物理内存起止。</li>
+</ul>
+</li>
+<li><p><strong>分支 2：永久内存 + 开启内存桶 Memory‑Bin</strong></p>
+<p>UEFI 支持为不同 MemoryType 划分独立内存池。</p>
+<p><code>MemoryTypeStatistics[MemoryType]</code> 存储该类型专属空闲内存上下限，优先从专属内存桶分配，避免多种内存类型地址混杂。</p>
+</li>
+<li><p><strong>分支 3：默认 PHIT（Pei Handoff Information Table）全局空闲内存池</strong></p>
+<p>当没有开启对应类型内存桶，则使用 PHIT 全局空闲内存。PHIT 保存在 HOB 链表的 HandOffInformationTable，是 PEI 最顶层的全局空闲内存标记。</p>
+</li>
+</ol>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br></pre></td><td class="code"><pre><span class="line">for (Index = 0; Index &lt; 2; Index++) &#123;</span><br><span class="line">  //</span><br><span class="line">  // Check to see if on correct boundary for the memory type.</span><br><span class="line">  // If not aligned, make the allocation aligned and that we are not trying to allocate page 0, which is used for</span><br><span class="line">  // null detection.</span><br><span class="line">  //</span><br><span class="line">  Padding = *(FreeMemoryTop) &amp; (Granularity - 1);</span><br><span class="line">  if (((UINTN)(*FreeMemoryTop - *FreeMemoryBottom) &lt; Padding) || (*(FreeMemoryTop) - Padding == 0)) &#123;</span><br><span class="line">    if ((Index == 0) &amp;&amp; PrivateData-&gt;MemoryTypeInformationInitialized &amp;&amp; (PrivateData-&gt;MemoryTypeStatistics[MemoryType].MaximumAddress != 0)) &#123;</span><br><span class="line">      //</span><br><span class="line">      // Try the default bin before searching memory allocation HOBs</span><br><span class="line">      //</span><br><span class="line">      FreeMemoryTop    = &amp;(Hob.HandoffInformationTable-&gt;EfiFreeMemoryTop);</span><br><span class="line">      FreeMemoryBottom = &amp;(Hob.HandoffInformationTable-&gt;EfiFreeMemoryBottom);</span><br><span class="line">      continue;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    goto NotEnoughFreeMemory;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  *(FreeMemoryTop) -= Padding;</span><br><span class="line">  if (Padding &gt;= EFI_PAGE_SIZE) &#123;</span><br><span class="line">    //</span><br><span class="line">    // Create a memory allocation HOB to cover</span><br><span class="line">    // the pages that we will lose to rounding</span><br><span class="line">    //</span><br><span class="line">    InternalBuildMemoryAllocationHob (</span><br><span class="line">      PeiServices,</span><br><span class="line">      *(FreeMemoryTop),</span><br><span class="line">      Padding &amp; ~(UINTN)EFI_PAGE_MASK,</span><br><span class="line">      EfiConventionalMemory</span><br><span class="line">      );</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Verify that there is sufficient memory to satisfy the allocation.</span><br><span class="line">  //</span><br><span class="line">  RemainingMemory = (UINTN)(*FreeMemoryTop - *FreeMemoryBottom);</span><br><span class="line">  RemainingPages  = (UINTN)(RShiftU64 (RemainingMemory, EFI_PAGE_SHIFT));</span><br><span class="line">  //</span><br><span class="line">  // The number of remaining pages needs to be greater than or equal to that of</span><br><span class="line">  // the request pages. In addition, there should be enough space left to hold a</span><br><span class="line">  // Memory Allocation HOB.</span><br><span class="line">  //</span><br><span class="line">  Pages = ALIGN_VALUE (Pages, EFI_SIZE_TO_PAGES (Granularity));</span><br><span class="line">  if ((RemainingPages &gt; Pages) ||</span><br><span class="line">      ((RemainingPages == Pages) &amp;&amp;</span><br><span class="line">       ((RemainingMemory &amp; EFI_PAGE_MASK) &gt;= sizeof (EFI_HOB_MEMORY_ALLOCATION))))</span><br><span class="line">  &#123;</span><br><span class="line">    //</span><br><span class="line">    // Update the PHIT to reflect the memory usage</span><br><span class="line">    //</span><br><span class="line">    *(FreeMemoryTop) -= Pages * EFI_PAGE_SIZE;</span><br><span class="line"></span><br><span class="line">    //</span><br><span class="line">    // Update the value for the caller</span><br><span class="line">    //</span><br><span class="line">    *Memory = *(FreeMemoryTop);</span><br><span class="line"></span><br><span class="line">    //</span><br><span class="line">    // Create a memory allocation HOB.</span><br><span class="line">    //</span><br><span class="line">    InternalBuildMemoryAllocationHob (</span><br><span class="line">      PeiServices,</span><br><span class="line">      *(FreeMemoryTop),</span><br><span class="line">      Pages * EFI_PAGE_SIZE,</span><br><span class="line">      MemoryType</span><br><span class="line">      );</span><br><span class="line"></span><br><span class="line">    return EFI_SUCCESS;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  // If this was the first allocation attempt, we are using memory bins, and this memory type lands in a bin,</span><br><span class="line">  // retry allocation but target the PHIT free region.</span><br><span class="line">  if ((Index == 0) &amp;&amp; PrivateData-&gt;MemoryTypeInformationInitialized &amp;&amp; (PrivateData-&gt;MemoryTypeStatistics[MemoryType].MaximumAddress != 0)) &#123;</span><br><span class="line">    //</span><br><span class="line">    // Try to the default bin before searching memory allocation HOBs</span><br><span class="line">    //</span><br><span class="line">    FreeMemoryTop    = &amp;(Hob.HandoffInformationTable-&gt;EfiFreeMemoryTop);</span><br><span class="line">    FreeMemoryBottom = &amp;(Hob.HandoffInformationTable-&gt;EfiFreeMemoryBottom);</span><br><span class="line">    continue;</span><br><span class="line">  &#125; else &#123;</span><br><span class="line">    goto NotEnoughFreeMemory;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>第一次优先尝试<strong>当前选中的内存桶</strong>；</p>
+<p>如果分配失败、内存桶可用，则切换到 PHIT 全局空闲池再试一次；</p>
+<p>两次失败之后，遍历所有内存分配 HOB 寻找空闲块。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">NotEnoughFreeMemory:</span><br><span class="line">  //</span><br><span class="line">  // Try to find free memory by searching memory allocation HOBs.</span><br><span class="line">  //</span><br><span class="line">  Status = FindFreeMemoryFromMemoryAllocationHob ((CONST EFI_PEI_SERVICES **)PeiServices, MemoryType, Pages, Granularity, Memory);</span><br><span class="line">  if (!EFI_ERROR (Status)) &#123;</span><br><span class="line">    return Status;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  DEBUG ((DEBUG_ERROR, &quot;AllocatePages failed: No 0x%lx Pages is available.\n&quot;, (UINT64)Pages));</span><br><span class="line">  DEBUG ((DEBUG_ERROR, &quot;There is only left 0x%lx pages memory resource to be allocated.\n&quot;, (UINT64)RemainingPages));</span><br><span class="line">  return EFI_OUT_OF_RESOURCES;</span><br></pre></td></tr></table></figure></div>
+
+<p>FindFreeMemoryFromMemoryAllocationHob 遍历整条 HOB 链表，扫描已经释放、标记为常规可用内存的 HOB 块，寻找满足对齐、页数量要求的空闲内存； HOB 遍历分配成功直接返回； 全部途径失败，打印错误日志，返回资源耗尽 EFI_OUT_OF_RESOURCES。</p>
+<p><strong>PeiAllocatePool</strong>      分配 PEI 管理的内存空间，以字节为单位申请</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-7-PEI-%E6%9C%8D%E5%8A%A13/image-20260805105039267.png"
+                      alt="image-20260805105039267"
+                ></p>
+<p>PEI 早期 <strong>Temporary Ram（临时内存）</strong> 通常只有 64KB 大小；所有 HOB 结构体总长度强制要求是 <strong>8‑字节对齐</strong>；0xFFF8 &#x3D; 64KB (0x10000) 减去 8；还要扣除 <code>EFI_HOB_MEMORY_POOL</code> 头部结构体占用空间；所以单次 Pool 分配上限</p>
+<p> &#x3D; <code>0xFFF8 − sizeof(EFI_HOB_MEMORY_POOL)</code>。</p>
+<p>用户申请大小超出单次 Pool 分配上限，直接返回资源不足；这里并不是真的系统没有内存，而是 <code>MEMORY_POOL</code> 类型 HOB 本身有长度硬性约束。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Status = PeiServicesCreateHob (</span><br><span class="line">           EFI_HOB_TYPE_MEMORY_POOL,</span><br><span class="line">           (UINT16)(sizeof (EFI_HOB_MEMORY_POOL) + Size),</span><br><span class="line">           (VOID **)&amp;Hob</span><br><span class="line">           );</span><br></pre></td></tr></table></figure></div>
+
+<p><code>PeiServicesCreateHob</code> 函数逻辑：</p>
+<ol>
+<li>从 PHIT 空闲内存顶端向下取出一块内存；</li>
+<li>完成 8 字节对齐；</li>
+<li>初始化 HOB 通用头部、HOB‑MemoryPool 结构体；</li>
+<li>PHIT 空闲指针往下偏移占用掉的内存。</li>
+</ol>
+<p>函数内参数说明：</p>
+<p><code>EFI_HOB_TYPE_MEMORY_POOL</code>：HOB 类型标记，代表这块 HOB 属于 PEI 堆池内存；</p>
+<p>HOB 总长度 &#x3D; 头部 <code>EFI_HOB_MEMORY_POOL</code> + 用户需要的缓冲区 Size；</p>
+<p>输出参数 Hob：返回新建 HOB 结构体首地址。</p>
+<p> <strong>(EFI_PEI_COPY_MEM)CopyMem</strong>   复制一段数据从源地址到目的地址</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-7-PEI-%E6%9C%8D%E5%8A%A13/image-20260805105509278.png"
+                      alt="image-20260805105509278"
+                ></p>
+<p><strong>(EFI_PEI_SET_MEM)SetMem</strong>  设置一段内存空间为输入的具体数值</p>
+<p><strong>状态报告服务：</strong></p>
+<p><strong>PeiReportStatusCode</strong>  ，报告状态编码，PEI模块可以使用这个服务报告系统运行过程中的状态。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-7-PEI-%E6%9C%8D%E5%8A%A13/image-20260805105632631.png"
+                      alt="image-20260805105632631"
+                ></p>
+<p>加载系统中已经安装的 PeiStatusCodePpi。<br>如果 PeiStatusCodePpi 已经安装，则调用 PeiStatusCodePpi 服务报告输入的状态编码，并返回状态值。<br>如果 PeiStatusCodePpi 没有安装，则本函数无法报告输入的状态编码，返回服务不可用的状态值。 </p>
+<p><strong>系统重启服务：</strong></p>
+<p><strong>PeiResetSystem</strong>  重启整个系统，包括处理器和各种设备</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-7-PEI-%E6%9C%8D%E5%8A%A13/image-20260805105805238.png"
+                      alt="image-20260805105805238"
+                ></p>
+<p><code>PeiResetSystem</code> 是 <strong>PEI 内核提供的 PeiServices‑&gt;ResetSystem</strong> 接口实现，负责在 PEI 预初始化阶段执行系统硬件复位。</p>
+<p>整体调用优先级：优先调用增强版 <code>PeiResetSystem2</code> → 查找复位 PPI → 报错返回复位服务不可用。</p>
+<p>Note: PeiResetSystem2 是增强复位接口，支持多种复位类型（冷复位、热复位、关机、特定平台复位）；</p>
+<p>如果函数执行成功触发硬件复位，CPU 直接重启，后续代码永远不会运行；</p>
+<p>函数返回 &#x3D; 平台没有实现 ResetSystem2，继续往下走旧版复位逻辑。</p>
+<p>通过调用ResetPpi 完成重启。</p>
+<p><strong>PeiResetSystem2</strong></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-7-PEI-%E6%9C%8D%E5%8A%A13/image-20260805135733025.png"
+                      alt="image-20260805135733025"
+                ></p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Status = PeiServicesLocatePpi (</span><br><span class="line">           &amp;gEfiPeiReset2PpiGuid,</span><br><span class="line">           0,</span><br><span class="line">           NULL,</span><br><span class="line">           (VOID **)&amp;Reset2Ppi</span><br><span class="line">           );</span><br><span class="line">if (!EFI_ERROR (Status)) &#123;</span><br><span class="line">  Reset2Ppi-&gt;ResetSystem (ResetType, ResetStatus, DataSize, ResetData);</span><br><span class="line">  return;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>调用 PEI 服务去搜寻 GUID 为 <code>gEfiPeiReset2PpiGuid</code> 的复位 2 协议。</p>
+<p>该 PPI 由平台硬件 PEIM 负责安装，内部封装芯片 PMC、看门狗、GPIO、复位寄存器等平台专属硬件操作。</p>
+<p>成功找到 Reset2Ppi，则调用平台实现的 ResetSystem 接口，把全部复位参数向下传递。</p>
+<p><strong>IO 服务</strong></p>
+<p> &amp;gPeiDefaultCpuIoPpi     提供IO，内存得读写</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-7-PEI-%E6%9C%8D%E5%8A%A13/image-20260805133245493.png"
+                      alt="image-20260805133245493"
+                ></p>
+<p> &amp;gPeiDefaultPciCfg2Ppi       提供PCI 接口访问</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-7-PEI-%E6%9C%8D%E5%8A%A13/image-20260805133310847.png"
+                      alt="image-20260805133310847"
+                ></p>
+<p>其他服务：</p>
+<p><strong>PeiFfsFindFileByName</strong>    在当前的 FV 数据空间通过文件 GUID 查找文件存储单元。 </p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-7-PEI-%E6%9C%8D%E5%8A%A13/image-20260805133721501.png"
+                      alt="image-20260805133721501"
+                ></p>
+<p>在输入的 FV 数据空间中，根据文件 GUID，查找对应的文件句柄。该函数的实现是基于 FvPpi 的 FindFileByName()服务。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CoreFvHandle = FvHandleToCoreHandle (VolumeHandle);</span><br></pre></td></tr></table></figure></div>
+
+<p>根据 FV 句柄查找对应的 PeiCore 内部维护的 FV 句柄结构。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">if ((CoreFvHandle == NULL) || (CoreFvHandle-&gt;FvPpi == NULL)) &#123;</span><br><span class="line">  return EFI_NOT_FOUND;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>如果对应的 PeiCore 内部维护的 FV 句柄结构没有找到，或者该 FV 数据结构的 FvPpi还没有安装，则直接返回没有找到的状态值。 </p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">return CoreFvHandle-&gt;FvPpi-&gt;FindFileByName (CoreFvHandle-&gt;FvPpi, FileName, &amp;VolumeHandle, FileHandle);</span><br></pre></td></tr></table></figure></div>
+
+<p>解析该 FV 的 FvPpi 已经存在，则可以调用 FvPpi 的 FindFileByName()服务查找符合条件的文件模块，并返回查找的状态值。 </p>
+<p><strong>PeiFfsGetFileInfo</strong>  通过文件句柄获得文件单元的基本信息，包括类型、GUID 及数据。 </p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-7-PEI-%E6%9C%8D%E5%8A%A13/image-20260805134019695.png"
+                      alt="image-20260805134019695"
+                ></p>
+<p>通过文件句柄获得文件单元的基本信息。该函数的实现是基于 FvPpi 的 GetFileInfo()服务。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CoreFvHandle = FileHandleToVolume (FileHandle);</span><br></pre></td></tr></table></figure></div>
+
+<p>根据输入的文件句柄查找该文件所在的 PeiCore 内部维护的 FV 句柄结构。 </p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">if ((CoreFvHandle == NULL) || (CoreFvHandle-&gt;FvPpi == NULL)) &#123;</span><br><span class="line">  return EFI_INVALID_PARAMETER;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>逻辑与前面一致：如果对应的 PeiCore 内部维护的 FV 句柄结构没有找到，或者该 FV 数据结构的 FvPpi还没有安装，则直接返回不合法的状态值。</p>
+<p>最后return 解析该 FV 的 FvPpi 已经存在，则可以调用 FvPpi 的 GetFileInfo ()服务获得该文件的基本信息，并返回获得文件信息的状态值。</p>
+<p><strong>PeiFfsGetVolumeInfo</strong>    通过 FV 句柄获得 FV 空间的基本信息，包括类型、格式、属性及数据。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-7-PEI-%E6%9C%8D%E5%8A%A13/image-20260805134241478.png"
+                      alt="image-20260805134241478"
+                ></p>
+<p>通过 FV 句柄获得 FV 数据空间的基本信息。该函数的实现是基于 FvPpi 的 GetVolumeInfo ()服务。</p>
+<p>逻辑与前两个函数一致，最后得return则是解析该 FV 的 FvPpi 已经存在，则可以调用 FvPpi 的 GetVolumeInfo()服务获得该 FV 的基本信息，并返回获得 FV 信息的状态值。 </p>
+<p><strong>PeiRegisterForShadow</strong>      注册 PEI 模块请求在物理内存中运行的申请。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-7-PEI-%E6%9C%8D%E5%8A%A13/image-20260805134444452.png"
+                      alt="image-20260805134444452"
+                ><br>给当前正在运行的 PEIM（PEI 阶段驱动程序）<strong>注册影子加载标记</strong>，标记该 PEIM 需要在永久内存就绪之后执行 <strong>Shadow（影子拷贝)</strong>：把驱动代码从 Flash‑ROM 拷贝到高速永久内存里运行，加快执行速度。</p>
+<p><strong>note</strong>：PEI 前期一切驱动都是直接从 SPI‑Flash 闪存上原地执行（XIP，Execute‑In‑Place），Flash 读取速度慢；等到系统永久内存 DRAM 初始化完毕，PEI‑Core 会把所有已经调用 <code>PeiRegisterForShadow()</code> 的 PEIM 复制进 DRAM，之后在内存中运行，也就是 Shadow。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">PEI_CORE_INSTANCE  *Private;</span><br><span class="line"></span><br><span class="line">Private = PEI_CORE_INSTANCE_FROM_PS_THIS (GetPeiServicesTablePointer ());</span><br></pre></td></tr></table></figure></div>
+
+<p>GetPeiServicesTablePointer() 获取当前 PEI 服务表指针；</p>
+<p>宏 PEI_CORE_INSTANCE_FROM_PS_THIS 通过服务表反向寻址拿到全局 PEI‑Core 实例 PEI_CORE_INSTANCE； Private 里面维护固件卷 FV 信息、每个 PEIM 的运行状态、当前正在执行的驱动句柄。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">if (Private-&gt;CurrentFileHandle != FileHandle) &#123;</span><br><span class="line">  //</span><br><span class="line">  // The FileHandle must be for the current PEIM</span><br><span class="line">  //</span><br><span class="line">  return EFI_NOT_FOUND;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p><code>CurrentFileHandle</code>：PEI‑Core 当前正在调度执行的 PEIM 文件句柄；</p>
+<p>该 API <strong>只允许 PEIM 在自身入口内调用</strong>；</p>
+<p>如果别的驱动句柄传入进来，直接返回 <code>EFI_NOT_FOUND</code>，禁止替其他 PEIM 注册影子。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">if (Private-&gt;Fv[Private-&gt;CurrentPeimFvCount].PeimState[Private-&gt;CurrentPeimCount] &gt;= PEIM_STATE_REGISTER_FOR_SHADOW) &#123;</span><br><span class="line">  //</span><br><span class="line">  // If the PEIM has already entered the PEIM_STATE_REGISTER_FOR_SHADOW or PEIM_STATE_DONE then it&#x27;s already been started</span><br><span class="line">  //</span><br><span class="line">  return EFI_ALREADY_STARTED;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>只要当前驱动状态 ≥ <code>PEIM_STATE_REGISTER_FOR_SHADOW</code>，代表已经注册影子或者驱动已经跑完，再次调用接口直接返回 <code>EFI_ALREADY_STARTED</code>，防止重复标记。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Private-&gt;Fv[Private-&gt;CurrentPeimFvCount].PeimState[Private-&gt;CurrentPeimCount] = PEIM_STATE_REGISTER_FOR_SHADOW;</span><br><span class="line">return EFI_SUCCESS;</span><br></pre></td></tr></table></figure></div>
+
+<p>将当前 PEIM 状态切换为<strong>申请影子拷贝标记</strong>。</p>
+<p>后续 PEI‑Core 在 DRAM 永久内存初始化完成之后，遍历全部 PEIM，凡是标记为 <code>PEIM_STATE_REGISTER_FOR_SHADOW</code> 的驱动，都会从 Flash 拷贝至 DRAM 内存执行。</p>
+<p><strong>PeiFfsFindSectionData3</strong>  </p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-7-PEI-%E6%9C%8D%E5%8A%A13/image-20260805135143139.png"
+                      alt="image-20260805135143139"
+                ></p>
+<p><strong>在指定 FFS‑File 文件内，按段类型、实例序号查找 Section 区块，同时输出校验认证状态</strong>，属于固件文件系统 FFS 的上层查找接口。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">if ((CoreFvHandle == NULL) || (CoreFvHandle-&gt;FvPpi == NULL)) &#123;</span><br><span class="line">  return EFI_NOT_FOUND;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>合法性校验：</p>
+<ul>
+<li><p>文件句柄无法映射到合法固件卷</p>
+</li>
+<li><p>该固件卷没有安装 FvPPI（固件卷访问协议）</p>
+<p>返回 EFI_NOT_FOUND，找不到对应固件资源。</p>
+</li>
+</ul>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">if ((CoreFvHandle-&gt;FvPpi-&gt;Signature == EFI_PEI_FIRMWARE_VOLUME_PPI_SIGNATURE) &amp;&amp;</span><br><span class="line">    (CoreFvHandle-&gt;FvPpi-&gt;Revision == EFI_PEI_FIRMWARE_VOLUME_PPI_REVISION))</span><br><span class="line">&#123;</span><br><span class="line">  return CoreFvHandle-&gt;FvPpi-&gt;FindSectionByType2 (CoreFvHandle-&gt;FvPpi, SectionType, SectionInstance, FileHandle, SectionData, AuthenticationStatus);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<ol>
+<li>校验 PPI 结构体魔数 Signature，防止野指针、错误结构体；</li>
+<li>严格匹配协议 Revision 版本；</li>
+</ol>
+<p>Note  只有新版固件卷 PPI 才具备 <code>FindSectionByType2</code> 接口。</p>
+<p>PEI‑Core 本身不会实现 FFS 文件解析逻辑，全部委托平台 &#x2F; 固件卷驱动安装的 <code>EFI_PEI_FIRMWARE_VOLUME_PPI</code>。<code>FindSectionByType2</code> 能力：</p>
+<p><strong>PeiFfsGetFileInfo2</strong>    </p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-7-PEI-%E6%9C%8D%E5%8A%A13/image-20260805135501896.png"
+                      alt="image-20260805135501896"
+                ></p>
+<p><strong>根据 FFS 文件句柄，获取固件文件的扩展文件信息结构体 EFI_FV_FILE_INFO2</strong>，新版结构体携带固件验签、安全认证状态。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">if ((CoreFvHandle-&gt;FvPpi-&gt;Signature == EFI_PEI_FIRMWARE_VOLUME_PPI_SIGNATURE) &amp;&amp;</span><br><span class="line">    (CoreFvHandle-&gt;FvPpi-&gt;Revision == EFI_PEI_FIRMWARE_VOLUME_PPI_REVISION))</span><br><span class="line">&#123;</span><br><span class="line">  return CoreFvHandle-&gt;FvPpi-&gt;GetFileInfo2 (CoreFvHandle-&gt;FvPpi, FileHandle, FileInfo);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>Signature 校验：确认该指针确实是 <code>EFI_PEI_FIRMWARE_VOLUME_PPI</code>，防范野指针；</p>
+<p>Revision 协议版本校验：只有最新修订版固件卷 PPI 才提供 <code>GetFileInfo2</code>；</p>
+<p>PEI‑Core 只充当转发层，<strong>实际 FFS 文件信息读取交由固件卷 PPI 实现</strong>。</p>
+<p>不同存储介质（SPI‑Flash、eMMC）各自实现 FvPPI，PEI 内核不需要关心底层存储。</p>
+<p><strong>PeiFreePages</strong>   <strong>释放由 PeiAllocatePages 申请的物理页内存</strong>。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line">EFI_STATUS</span><br><span class="line">EFIAPI</span><br><span class="line">PeiFreePages (</span><br><span class="line">  IN CONST EFI_PEI_SERVICES  **PeiServices,</span><br><span class="line">  IN EFI_PHYSICAL_ADDRESS    Memory,</span><br><span class="line">  IN UINTN                   Pages</span><br><span class="line">  )</span><br><span class="line">&#123;</span><br><span class="line">  PEI_CORE_INSTANCE          *PrivateData;</span><br><span class="line">  UINT64                     Bytes;</span><br><span class="line">  UINT64                     Start;</span><br><span class="line">  UINT64                     End;</span><br><span class="line">  EFI_PEI_HOB_POINTERS       Hob;</span><br><span class="line">  EFI_HOB_MEMORY_ALLOCATION  *MemoryAllocationHob;</span><br><span class="line"></span><br><span class="line">  Bytes = LShiftU64 (Pages, EFI_PAGE_SHIFT);</span><br><span class="line">  Start = Memory;</span><br><span class="line">  End   = Start + Bytes - 1;</span><br><span class="line"></span><br><span class="line">  if ((Pages == 0) || ((Start &amp; EFI_PAGE_MASK) != 0) || (Start &gt;= End)) &#123;</span><br><span class="line">    return EFI_INVALID_PARAMETER;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  PrivateData = PEI_CORE_INSTANCE_FROM_PS_THIS (PeiServices);</span><br><span class="line">  Hob.Raw     = PrivateData-&gt;HobList.Raw;</span><br><span class="line"></span><br><span class="line">  if (Hob.Raw == NULL) &#123;</span><br><span class="line">    //</span><br><span class="line">    // HOB is not initialized yet.</span><br><span class="line">    //</span><br><span class="line">    return EFI_NOT_AVAILABLE_YET;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  MemoryAllocationHob = NULL;</span><br><span class="line">  Hob.Raw             = GetFirstHob (EFI_HOB_TYPE_MEMORY_ALLOCATION);</span><br><span class="line">  while (Hob.Raw != NULL) &#123;</span><br><span class="line">    if ((Hob.MemoryAllocation-&gt;AllocDescriptor.MemoryType != EfiConventionalMemory) &amp;&amp;</span><br><span class="line">        (Memory &gt;= Hob.MemoryAllocation-&gt;AllocDescriptor.MemoryBaseAddress) &amp;&amp;</span><br><span class="line">        ((Memory + Bytes) &lt;= (Hob.MemoryAllocation-&gt;AllocDescriptor.MemoryBaseAddress + Hob.MemoryAllocation-&gt;AllocDescriptor.MemoryLength)))</span><br><span class="line">    &#123;</span><br><span class="line">      //</span><br><span class="line">      // Found the memory allocation HOB that includes the memory pages to be freed.</span><br><span class="line">      //</span><br><span class="line">      MemoryAllocationHob = (EFI_HOB_MEMORY_ALLOCATION *)Hob.Raw;</span><br><span class="line">      break;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Hob.Raw = GET_NEXT_HOB (Hob);</span><br><span class="line">    Hob.Raw = GetNextHob (EFI_HOB_TYPE_MEMORY_ALLOCATION, Hob.Raw);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  if (MemoryAllocationHob != NULL) &#123;</span><br><span class="line">    UpdateOrSplitMemoryAllocationHob (PeiServices, MemoryAllocationHob, Memory, Bytes, EfiConventionalMemory);</span><br><span class="line">    FreeMemoryAllocationHob (PrivateData, MemoryAllocationHob);</span><br><span class="line">    return EFI_SUCCESS;</span><br><span class="line">  &#125; else &#123;</span><br><span class="line">    return EFI_NOT_FOUND;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>PEI 阶段的内存管理依靠 <strong>HOB (Hand‑Off Block)</strong>，内存分配信息存放在 <code>EFI_HOB_TYPE_MEMORY_ALLOCATION</code> 内存分配 HOB，不存在传统堆空闲链表；释放内存本质就是修改、拆分内存分配 HOB，把内存标记回普通可用内存 EfiConventionalMemory。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Bytes = LShiftU64 (Pages, EFI_PAGE_SHIFT);</span><br><span class="line">Start = Memory;</span><br><span class="line">End   = Start + Bytes - 1;</span><br></pre></td></tr></table></figure></div>
+
+<p><code>EFI_PAGE_SHIFT = 12</code>，一页大小 4KB；</p>
+<p>页数左移 12 位换算成总字节；</p>
+<p>End &#x3D; 起始地址 + 总字节 − 1，得到区间最后一字节地址。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">if ((Pages == 0) || ((Start &amp; EFI_PAGE_MASK) != 0) || (Start &gt;= End)) &#123;</span><br><span class="line">  return EFI_INVALID_PARAMETER;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>Pages 等于 0，非法；</p>
+<p>起始物理地址没有按照 4KB 页对齐；<code>EFI_PAGE_MASK = 0xFFF</code>；</p>
+<p>地址溢出造成 Start &gt;&#x3D; End；</p>
+<p>任意条件命中，返回 <code>EFI_INVALID_PARAMETER</code>。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">PrivateData = PEI_CORE_INSTANCE_FROM_PS_THIS (PeiServices);</span><br><span class="line">Hob.Raw     = PrivateData-&gt;HobList.Raw;</span><br><span class="line"></span><br><span class="line">if (Hob.Raw == NULL) &#123;</span><br><span class="line">  //</span><br><span class="line">  // HOB is not initialized yet.</span><br><span class="line">  //</span><br><span class="line">  return EFI_NOT_AVAILABLE_YET;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>通过 PEI 服务表反向取出 PEI_CORE_INSTANCE； HOB 链表还未初始化，内存管理服务尚未就绪，返回 EFI_NOT_AVAILABLE_YET。 时间节点：DRAM 永久内存初始化完毕之后才会初始化 HOB 链表；早期 TempRam 临时内存阶段不能使用 FreePages。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">MemoryAllocationHob = NULL;</span><br><span class="line">Hob.Raw             = GetFirstHob (EFI_HOB_TYPE_MEMORY_ALLOCATION);</span><br><span class="line">while (Hob.Raw != NULL) &#123;</span><br><span class="line">  if ((Hob.MemoryAllocation-&gt;AllocDescriptor.MemoryType != EfiConventionalMemory) &amp;&amp;</span><br><span class="line">      (Memory &gt;= Hob.MemoryAllocation-&gt;AllocDescriptor.MemoryBaseAddress) &amp;&amp;</span><br><span class="line">      ((Memory + Bytes) &lt;= (Hob.MemoryAllocation-&gt;AllocDescriptor.MemoryBaseAddress + Hob.MemoryAllocation-&gt;AllocDescriptor.MemoryLength)))</span><br><span class="line">  &#123;</span><br><span class="line">    //</span><br><span class="line">    // Found the memory allocation HOB that includes the memory pages to be freed.</span><br><span class="line">    //</span><br><span class="line">    MemoryAllocationHob = (EFI_HOB_MEMORY_ALLOCATION *)Hob.Raw;</span><br><span class="line">    break;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  Hob.Raw = GET_NEXT_HOB (Hob);</span><br><span class="line">  Hob.Raw = GetNextHob (EFI_HOB_TYPE_MEMORY_ALLOCATION, Hob.Raw);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>1.MemoryType !&#x3D; EfiConventionalMemory</p>
+<p>只查找<strong>已经被占用的内存 HOB；普通空闲内存不会执行释放</strong>；</p>
+<p>释放起始地址大于等于 HOB 内存基址</p>
+<p>释放区间的末尾地址不能超过该 HOB 内存区间</p>
+<p>之后保存该内存分配 HOB 并跳出循环；循环继续遍历下一条内存分配 HOB。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">if (MemoryAllocationHob != NULL) &#123;</span><br><span class="line">  UpdateOrSplitMemoryAllocationHob (PeiServices, MemoryAllocationHob, Memory, Bytes, EfiConventionalMemory);</span><br><span class="line">  FreeMemoryAllocationHob (PrivateData, MemoryAllocationHob);</span><br><span class="line">  return EFI_SUCCESS;</span><br><span class="line">&#125; else &#123;</span><br><span class="line">  return EFI_NOT_FOUND;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<h3 id="1）UpdateOrSplitMemoryAllocationHob"><a href="#1）UpdateOrSplitMemoryAllocationHob" class="headerlink" title="1）UpdateOrSplitMemoryAllocationHob"></a>1）UpdateOrSplitMemoryAllocationHob</h3><p>核心 HOB 处理函数，存在三种场景：</p>
+<ol>
+<li>释放区间刚好等于整块已分配内存 → 直接清除该占用标记；</li>
+<li>释放的是分配块头部一段内存 → 拆分 HOB，剩余保留占用；</li>
+<li>释放中间或者尾部区间 → 拆分生成新的 HOB 条目，被释放部分设置成 EfiConventionalMemory（可用常规内存）。</li>
+</ol>
+<h3 id="2）FreeMemoryAllocationHob"><a href="#2）FreeMemoryAllocationHob" class="headerlink" title="2）FreeMemoryAllocationHob"></a>2）FreeMemoryAllocationHob</h3><p>当该内存分配 HOB 内部已经不存在被占用的内存区域，就把这条空的内存分配 HOB 从 HOB 链表移除。</p>
+<p>找不到对应内存分配 HOB → 返回 <code>EFI_NOT_FOUND</code>，代表该段地址并不是通过 AllocatePages 申请而来。</p>
+<p><em><strong>结合前面内存操作得函数，PEI 得内存操作逻辑大体如下：</strong></em><br>PEI 阶段内存管理底层原理总结 PEI 永久内存不使用传统双向空闲链表，全部依靠 HOB 描述内存区块； </p>
+<p>AllocatePages：切割 EfiConventionalMemory 空闲 HOB，新建内存占用 HOB； FreePages：遍历内存分配 HOB，拆分区块、把内存类型改回常规可用内存；</p>
+<p>HOB 是顺序链表，每次释放都会遍历，因此频繁分配释放性能较差；</p>
+<p>PEI 属于一次性初始化阶段，不会长时间频繁操作内存。</p>
+
 		</div>
 
 		
@@ -473,7 +758,7 @@
         
             <li>
                 <strong>Updated at
-                    :</strong> 2026-08-04 13:51:10
+                    :</strong> 2026-08-05 14:08:12
             </li>
         
         <li>
@@ -513,6 +798,18 @@
 
 		
 		<div class="article-nav my-8 flex justify-between items-center px-2 sm:px-6 md:px-8">
+			
+			<div class="article-prev border-border-color shadow-redefine-flat shadow-shadow-color-2 rounded-medium px-4 py-2 hover:shadow-redefine-flat-hover hover:shadow-shadow-color-2">
+				<a class="prev" rel="prev" href="/2026/08/04/%E5%9F%BA%E4%BA%8EQT-%E4%B8%8A%E4%BD%8D%E6%9C%BA%E5%BC%80%E5%8F%91/">
+					<span class="left arrow-icon flex justify-center items-center">
+						<i class="fa-solid fa-chevron-left"></i>
+					</span>
+					<span class="title flex justify-center items-center">
+						<span class="post-nav-title-item truncate max-w-48">基于QT 上位机开发</span>
+						<span class="post-nav-item">Prev posts</span>
+					</span>
+				</a>
+			</div>
 			
 			
 			<div class="article-next border-border-color shadow-redefine-flat shadow-shadow-color-2 rounded-medium px-4 py-2 hover:shadow-redefine-flat-hover hover:shadow-shadow-color-2">
@@ -602,7 +899,7 @@
 	<div class="post-toc">
 		<div class="toc-title">On this page</div>
 		<div class="page-title">PEI Phase (7) PEI 服务3</div>
-		
+		<ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#1%EF%BC%89UpdateOrSplitMemoryAllocationHob"><span class="nav-text">1）UpdateOrSplitMemoryAllocationHob</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2%EF%BC%89FreeMemoryAllocationHob"><span class="nav-text">2）FreeMemoryAllocationHob</span></a></li></ol>
 
 	</div>
 </div>
@@ -630,7 +927,7 @@
                 
                 <p class="post-count space-x-0.5">
                     <span>
-                        10 posts in total
+                        12 posts in total
                     </span>
                     
                 </p>
