@@ -93,8 +93,8 @@
 <meta property="og:description" content="Hexo Theme Redefine, Redefine Your Hexo Journey.">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://meteorcool.github.io/images/redefine-og.webp">
-<meta property="article:published_time" content="2026-08-06T06:59:43.143Z">
-<meta property="article:modified_time" content="2026-08-06T07:00:00.294Z">
+<meta property="article:published_time" content="2026-08-06T06:59:43.000Z">
+<meta property="article:modified_time" content="2026-08-10T06:09:44.555Z">
 <meta property="article:author" content="Meteor Liu">
 <meta property="article:tag" content="Code">
 <meta property="article:tag" content="PEI">
@@ -321,15 +321,15 @@
 
         <div class="statistics flex justify-around my-2.5">
     <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/tags">
-        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">10</div>
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">11</div>
         <div class="label text-third-text-color text-sm">Tags</div>
     </a>
     <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/categories">
-        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">8</div>
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">9</div>
         <div class="label text-third-text-color text-sm">Categories</div>
     </a>
     <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/archives">
-        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">13</div>
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">14</div>
         <div class="label text-third-text-color text-sm">Posts</div>
     </a>
 </div>
@@ -380,12 +380,48 @@
     
         <span class="article-date article-meta-item">
             <i class="fa-regular fa-wrench"></i>&nbsp;
-            <span class="desktop">2026-08-06 15:00</span>
-            <span class="mobile">2026-08-06 15:00</span>
+            <span class="desktop">2026-08-10 14:09:44</span>
+            <span class="mobile">2026-08-10 14:09:44</span>
             <span class="hover-info">Updated</span>
         </span>
     
 
+    
+        <span class="article-categories article-meta-item">
+            <i class="fa-regular fa-folders"></i>&nbsp;
+            <ul>
+                
+                
+                    
+                        
+                        <li>
+                            <a href="/categories/BIOS/">BIOS</a>&nbsp;
+                        </li>
+                    
+                    
+                
+                    
+                        
+                            <li>></li>
+                        
+                        <li>
+                            <a href="/categories/BIOS/BIOS-Code/">BIOS Code</a>&nbsp;
+                        </li>
+                    
+                    
+                
+                    
+                        
+                            <li>></li>
+                        
+                        <li>
+                            <a href="/categories/BIOS/BIOS-Code/PEI/">PEI</a>&nbsp;
+                        </li>
+                    
+                    
+                
+            </ul>
+        </span>
     
     
         <span class="article-tags article-meta-item">
@@ -393,11 +429,11 @@
             <ul>
                 
                     <li>
-                        <a href="/tags/PEI/">PEI</a>&nbsp;
+                        <a href="/tags/Code/">Code</a>&nbsp;
                     </li>
                 
                     <li>
-                        | <a href="/tags/Code/">Code</a>&nbsp;
+                        | <a href="/tags/PEI/">PEI</a>&nbsp;
                     </li>
                 
             </ul>
@@ -419,7 +455,73 @@
 
 
 		<div class="article-content markdown-body px-2 sm:px-6 md:px-8 pb-8">
-			
+			<p> DxeIpl PPI，PEI 到DXE 阶段的核心PPI，定义在dxeipl.h</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-9-%E4%B8%80%E4%BA%9BPPI-%E4%BB%8B%E7%BB%8D2/image-20260810134744931.png"
+                      alt="image-20260810134744931"
+                ></p>
+<p><strong>PEI 阶段通往 DXE 阶段唯一入口 PPI</strong></p>
+<p>PEICore 所有固件卷扫描、PEI 驱动调度、内存发现、临时堆 &#x2F; 永久内存初始化全部做完以后，PEI‑Core 最终调用 DxeIpl‑PPI 的 Entry ()，转交系统控制权给 <strong>DXE IPL（DXE 初始加载器）</strong>，正式进入 DXE 驱动执行环境。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/PEI-Phase-9-%E4%B8%80%E4%BA%9BPPI-%E4%BB%8B%E7%BB%8D2/image-20260810134753491.png"
+                      alt="image-20260810134753491"
+                ></p>
+<p><code>This</code>：指向自身 DxeIpl PPI 实例</p>
+<p><code>HobList</code>：<strong>HOB 链表起始指针</strong></p>
+<p>正常流程下 Entry <strong>永远不会返回</strong>；Entry 里面完成环境切换、跳转 DXE 内核；</p>
+<p>如果返回代表 DXE‑IPL 初始化失败，固件会进入错误 &#x2F; 重启流程。</p>
+<p>PEI基本流程：<br>1.PeiCore 调度所有 PEI 模块</p>
+<p>2.所有 PEI 驱动执行完毕，永久内存就绪</p>
+<p>3.PeiCore Locate 定位 DxeIpl PPI</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Status = PeiServicesLocatePpi (</span><br><span class="line">           &amp;gEfiDxeIplPpiGuid,</span><br><span class="line">           0,</span><br><span class="line">           NULL,</span><br><span class="line">           (VOID **)&amp;TempPtr.DxeIpl</span><br><span class="line">           );</span><br><span class="line">ASSERT_EFI_ERROR (Status);</span><br></pre></td></tr></table></figure></div>
+
+<p>4.发起调用 DxeIplPpi-&gt;Entry ()</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">DEBUG ((DEBUG_INFO, &quot;DXE IPL Entry\n&quot;));</span><br><span class="line">Status = TempPtr.DxeIpl-&gt;Entry (</span><br><span class="line">                           TempPtr.DxeIpl,</span><br><span class="line">                           &amp;PrivateData.Ps,</span><br><span class="line">                           PrivateData.HobList</span><br><span class="line">                           );</span><br></pre></td></tr></table></figure></div>
+
+<p>其本质或者说别名是dxeloadcore，其需要DxeIpl PeiM 完成初始化：</p>
+<p>其入口函数为  </p>
+<p>ENTRY_POINT                    &#x3D; <em><strong>PeimInitializeDxeIpl</strong></em></p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line">EFI_STATUS</span><br><span class="line">EFIAPI</span><br><span class="line">PeimInitializeDxeIpl (</span><br><span class="line">  IN       EFI_PEI_FILE_HANDLE  FileHandle,</span><br><span class="line">  IN CONST EFI_PEI_SERVICES     **PeiServices</span><br><span class="line">  )</span><br><span class="line">&#123;</span><br><span class="line">  EFI_STATUS     Status;</span><br><span class="line">  EFI_BOOT_MODE  BootMode;</span><br><span class="line">  VOID           *Dummy;</span><br><span class="line"></span><br><span class="line">  BootMode = GetBootModeHob ();</span><br><span class="line"></span><br><span class="line">  if (BootMode != BOOT_ON_S3_RESUME) &#123;</span><br><span class="line">    Status = PeiServicesRegisterForShadow (FileHandle);</span><br><span class="line">    if (Status == EFI_SUCCESS) &#123;</span><br><span class="line">      //</span><br><span class="line">      // EFI_SUCCESS means it is the first time to call register for shadow.</span><br><span class="line">      //</span><br><span class="line">      return Status;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    //</span><br><span class="line">    // Ensure that DXE IPL is shadowed to permanent memory.</span><br><span class="line">    //</span><br><span class="line">    ASSERT (Status == EFI_ALREADY_STARTED);</span><br><span class="line"></span><br><span class="line">    //</span><br><span class="line">    // DXE core load requires permanent memory.</span><br><span class="line">    //</span><br><span class="line">    Status = PeiServicesLocatePpi (</span><br><span class="line">               &amp;gEfiPeiMemoryDiscoveredPpiGuid,</span><br><span class="line">               0,</span><br><span class="line">               NULL,</span><br><span class="line">               (VOID **)&amp;Dummy</span><br><span class="line">               );</span><br><span class="line">    ASSERT_EFI_ERROR (Status);</span><br><span class="line">    if (EFI_ERROR (Status)) &#123;</span><br><span class="line">      return Status;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    //</span><br><span class="line">    // Now the permanent memory exists, install the PPIs for decompression</span><br><span class="line">    // and section extraction.</span><br><span class="line">    //</span><br><span class="line">    Status = InstallIplPermanentMemoryPpis (NULL, NULL, NULL);</span><br><span class="line">    ASSERT_EFI_ERROR (Status);</span><br><span class="line">  &#125; else &#123;</span><br><span class="line">    //</span><br><span class="line">    // Install memory discovered PPI notification to install PPIs for</span><br><span class="line">    // decompression and section extraction.</span><br><span class="line">    //</span><br><span class="line">    Status = PeiServicesNotifyPpi (&amp;mMemoryDiscoveredNotifyList);</span><br><span class="line">    ASSERT_EFI_ERROR (Status);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Install DxeIpl PPI.</span><br><span class="line">  //</span><br><span class="line">  Status = PeiServicesInstallPpi (&amp;mDxeIplPpiList);</span><br><span class="line">  ASSERT_EFI_ERROR (Status);</span><br><span class="line"></span><br><span class="line">  return Status;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">BootMode = GetBootModeHob ();</span><br></pre></td></tr></table></figure></div>
+
+<p>第一步：读取 HOB 获取当前启动模式</p>
+<p><code>BOOT_ON_S3_RESUME</code>：S3 休眠唤醒开机</p>
+<p>其余：冷启动、重启、从睡眠以外模式启动</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">if (BootMode != BOOT_ON_S3_RESUME) &#123;</span><br><span class="line">  Status = PeiServicesRegisterForShadow (FileHandle);</span><br><span class="line">  if (Status == EFI_SUCCESS) &#123;</span><br><span class="line">    //</span><br><span class="line">    // EFI_SUCCESS means it is the first time to call register for shadow.</span><br><span class="line">    //</span><br><span class="line">    return Status;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>向 PeiCore 登记：<strong>当前 PEIM 模块需要等永久 DRAM 就绪之后，拷贝（Shadow）到 DRAM 永久内存执行</strong></p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Status = PeiServicesLocatePpi (</span><br><span class="line">           &amp;gEfiPeiMemoryDiscoveredPpiGuid,</span><br><span class="line">           0,</span><br><span class="line">           NULL,</span><br><span class="line">           (VOID **)&amp;Dummy</span><br><span class="line">           );</span><br><span class="line">ASSERT_EFI_ERROR (Status);</span><br><span class="line">if (EFI_ERROR (Status)) &#123;</span><br><span class="line">  return Status;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p><code>EFI_PEI_MEMORY_DISCOVERED_PPI</code> 是 DRAM 初始化完毕之后内存探测 PEIM 安装的标记 PPI。</p>
+<p>此处只是探测该 PPI 是否存在，Dummy 仅为占位指针；</p>
+<p>断言失败直接卡死，保证<strong>永久内存已经就绪</strong>，DxeIpl 后续加载 DxeCore 必须依赖 DRAM。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">//</span><br><span class="line">Status = InstallIplPermanentMemoryPpis (NULL, NULL, NULL);</span><br><span class="line">ASSERT_EFI_ERROR (Status);</span><br></pre></td></tr></table></figure></div>
+
+<h2 id="InstallIplPermanentMemoryPpis"><a href="#InstallIplPermanentMemoryPpis" class="headerlink" title="InstallIplPermanentMemoryPpis()"></a>InstallIplPermanentMemoryPpis()</h2><p>该内部函数负责安装 DXE‑IPL 需要用到的工具 PPI：</p>
+<ol>
+<li>固件分区解压 PPI（Decompress PPI）</li>
+<li>自定义 Guided‑Section 解析 PPI</li>
+</ol>
+<blockquote>
+<p>前面提到的DxeLoadCore（DxeIpl‑PPI-&gt;Entry）解析 FV、解压 DxeCore 镜像依赖这些接口。</p>
+</blockquote>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&#125; else &#123;</span><br><span class="line">   //</span><br><span class="line">   // Install memory discovered PPI notification to install PPIs for</span><br><span class="line">   // decompression and section extraction.</span><br><span class="line">   //</span><br><span class="line">   Status = PeiServicesNotifyPpi (&amp;mMemoryDiscoveredNotifyList);</span><br><span class="line">   ASSERT_EFI_ERROR (Status);</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>S3 休眠唤醒分支 else</p>
+<p>S3 Resume 的 PEI 执行流程和冷启动不一样，这里<strong>不使用影子加载</strong>；</p>
+<p>直接注册 PPI‑Notify 回调，监听 <code>MemoryDiscoveredPpi</code>。</p>
+<p>等到 DRAM 就绪之后触发回调函数，回调内部调用 <code>InstallIplPermanentMemoryPpis()</code> 安装解压、section 解析 PPI。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Status = PeiServicesInstallPpi (&amp;mDxeIplPpiList);</span><br><span class="line">ASSERT_EFI_ERROR (Status);</span><br><span class="line"></span><br><span class="line">return Status;</span><br></pre></td></tr></table></figure></div>
+
+<p>统一安装 DxeIpl‑PPI，<code>mDxeIplPpiList</code> 是 PPI 描述符，内部绑定全局实例 <code>mDxeIplPpi</code>，它的 Entry 函数指针 &#x3D; <code>DxeLoadCore</code>。</p>
+<p>至此 PEI‑Core PPI 数据库注册完毕 DxeIpl‑PPI；</p>
+<p>后续 PeiCore 所有 PEIM 调度完毕之后，Locate 该 PPI，调用 <code>DxeLoadCore</code> 加载 DXE 内核。</p>
+
 		</div>
 
 		
@@ -433,7 +535,7 @@
         
             <li>
                 <strong>Updated at
-                    :</strong> 2026-08-06 15:00:00
+                    :</strong> 2026-08-10 14:09:44
             </li>
         
         <li>
@@ -459,11 +561,11 @@
 		<ul class="post-tags-box text-lg mt-1.5 flex-wrap justify-center flex md:hidden">
 			
 			<li class="tag-item mx-0.5">
-				<a href="/tags/PEI/">#PEI</a>&nbsp;
+				<a href="/tags/Code/">#Code</a>&nbsp;
 			</li>
 			
 			<li class="tag-item mx-0.5">
-				<a href="/tags/Code/">#Code</a>&nbsp;
+				<a href="/tags/PEI/">#PEI</a>&nbsp;
 			</li>
 			
 		</ul>
@@ -473,6 +575,18 @@
 
 		
 		<div class="article-nav my-8 flex justify-between items-center px-2 sm:px-6 md:px-8">
+			
+			<div class="article-prev border-border-color shadow-redefine-flat shadow-shadow-color-2 rounded-medium px-4 py-2 hover:shadow-redefine-flat-hover hover:shadow-shadow-color-2">
+				<a class="prev" rel="prev" href="/2026/08/10/DXE-Phase-1-DXE%E7%AE%80%E4%BB%8B%E4%B8%8E%E5%85%B6%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/">
+					<span class="left arrow-icon flex justify-center items-center">
+						<i class="fa-solid fa-chevron-left"></i>
+					</span>
+					<span class="title flex justify-center items-center">
+						<span class="post-nav-title-item truncate max-w-48">DXE Phase 1 DXE简介与其基本机制</span>
+						<span class="post-nav-item">Prev posts</span>
+					</span>
+				</a>
+			</div>
 			
 			
 			<div class="article-next border-border-color shadow-redefine-flat shadow-shadow-color-2 rounded-medium px-4 py-2 hover:shadow-redefine-flat-hover hover:shadow-shadow-color-2">
@@ -562,7 +676,7 @@
 	<div class="post-toc">
 		<div class="toc-title">On this page</div>
 		<div class="page-title">PEI Phase (9) 一些PPI 介绍2</div>
-		
+		<ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#InstallIplPermanentMemoryPpis"><span class="nav-text">InstallIplPermanentMemoryPpis()</span></a></li></ol>
 
 	</div>
 </div>
@@ -592,7 +706,7 @@
                 
                 <p class="post-count space-x-0.5">
                     <span>
-                        13 posts in total
+                        14 posts in total
                     </span>
                     
                 </p>
