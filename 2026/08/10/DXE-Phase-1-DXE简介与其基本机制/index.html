@@ -94,7 +94,7 @@
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://meteorcool.github.io/images/redefine-og.webp">
 <meta property="article:published_time" content="2026-08-10T06:07:11.000Z">
-<meta property="article:modified_time" content="2026-08-10T06:47:07.891Z">
+<meta property="article:modified_time" content="2026-08-12T07:14:24.845Z">
 <meta property="article:author" content="Meteor Liu">
 <meta property="article:tag" content="Code">
 <meta property="article:tag" content="DXE">
@@ -329,7 +329,7 @@
         <div class="label text-third-text-color text-sm">Categories</div>
     </a>
     <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/archives">
-        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">14</div>
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">15</div>
         <div class="label text-third-text-color text-sm">Posts</div>
     </a>
 </div>
@@ -380,8 +380,8 @@
     
         <span class="article-date article-meta-item">
             <i class="fa-regular fa-wrench"></i>&nbsp;
-            <span class="desktop">2026-08-10 14:47:07</span>
-            <span class="mobile">2026-08-10 14:47:07</span>
+            <span class="desktop">2026-08-12 15:14:24</span>
+            <span class="mobile">2026-08-12 15:14:24</span>
             <span class="hover-info">Updated</span>
         </span>
     
@@ -470,6 +470,31 @@
                       alt="image-20260810142038224"
                 ></p>
 <p><strong>DXE的一些机制</strong></p>
+<ol>
+<li><p>Lock 锁机制 </p>
+<p>UEFI 是基于事件(Event)的有限多任务模型，这意味着 Boot  Services 是可重入的。在 DXE Foundation 内部，定义了若干个锁来保护重要的共享资源，比如保护事件队列的锁，保护handle database 的锁等等。 </p>
+<p>EFI_LOCK  EFI_LOCK_STATE定义如下：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/DXE-Phase-1-DXE%E7%AE%80%E4%BB%8B%E4%B8%8E%E5%85%B6%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/image-20260812150414315.png"
+                      alt="image-20260812150414315"
+                ></p>
+<p>OwnerTpl 域用来存放请求该锁时系统的当前 TPL。当释放锁时，OwnerTpl 用来恢复系统的TPL。Tpl 域表示锁本身的 TPL，当取得该锁后，系统被提升到此 TPL。锁有三种状态：未初始化，取得，释放。Lock 域用来存放锁的当前状态。锁只有在释放的状态下才能被取得。</p>
+</li>
+<li><p>事件机制</p>
+</li>
+</ol>
+<p>​	 系统时钟中断：UEFI 是基于事件(Event)的有限多任务模型。UEFI 只支持时钟中断而事件机制的核心即时钟中断。这与现代操作系统一般使用系统时钟中断来实现基于时间片的多任务调度类似。DXE Foundation 提供了时钟中断的服务例程，但设计上 DXE Foundation 是硬件无关的，所以它不能直接操作系统时钟，而是依赖 Timer Architectural Protocol 来设置自己的时钟中断服务。 </p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/DXE-Phase-1-DXE%E7%AE%80%E4%BB%8B%E4%B8%8E%E5%85%B6%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/image-20260812151322765.png"
+                      alt="image-20260812151322765"
+                ></p>
+<p>当 DXE  Foundation 发现 Timer  Architectural  Protocol 被安装，就会调用 Timer  Architectural Protocol 的 RegisterHandler()函数去注册自己的时钟中断服务函数 CoreTimerTick()。 </p>
+<p>事件分发 </p>
+<p>​	现代操作系统一般在系统调用和时钟中断发生时进行任务调度。如果把 DXE Foundation 比作操作系统的 kernel，把 boot service 比作系统调用，那么 EDKII 中,DXE Foundation 也是在“系统调用”和时钟中断发生时进行有限多任务的调试，即事件分发。 </p>
 
 		</div>
 
@@ -484,7 +509,7 @@
         
             <li>
                 <strong>Updated at
-                    :</strong> 2026-08-10 14:47:07
+                    :</strong> 2026-08-12 15:14:24
             </li>
         
         <li>
@@ -524,6 +549,18 @@
 
 		
 		<div class="article-nav my-8 flex justify-between items-center px-2 sm:px-6 md:px-8">
+			
+			<div class="article-prev border-border-color shadow-redefine-flat shadow-shadow-color-2 rounded-medium px-4 py-2 hover:shadow-redefine-flat-hover hover:shadow-shadow-color-2">
+				<a class="prev" rel="prev" href="/2026/08/12/DXE-Phase-2-DXE-dispatcher/">
+					<span class="left arrow-icon flex justify-center items-center">
+						<i class="fa-solid fa-chevron-left"></i>
+					</span>
+					<span class="title flex justify-center items-center">
+						<span class="post-nav-title-item truncate max-w-48">DXE Phase 2 DXE dispatcher</span>
+						<span class="post-nav-item">Prev posts</span>
+					</span>
+				</a>
+			</div>
 			
 			
 			<div class="article-next border-border-color shadow-redefine-flat shadow-shadow-color-2 rounded-medium px-4 py-2 hover:shadow-redefine-flat-hover hover:shadow-shadow-color-2">
@@ -643,7 +680,7 @@
                 
                 <p class="post-count space-x-0.5">
                     <span>
-                        14 posts in total
+                        15 posts in total
                     </span>
                     
                 </p>
