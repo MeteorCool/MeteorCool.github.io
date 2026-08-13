@@ -408,7 +408,7 @@
         <div class="label text-third-text-color text-sm">Categories</div>
     </a>
     <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/archives">
-        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">15</div>
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">16</div>
         <div class="label text-third-text-color text-sm">Posts</div>
     </a>
 </div>
@@ -490,7 +490,7 @@
                 <div class="author flex flex-col justify-center my-2.5 mx-0">
     <div class="name">Meteor Liu</div>
     
-        <div class="label">Lv2</div>
+        <div class="label">Lv3</div>
     
 </div>
                 <div class="statistics flex justify-around my-2.5">
@@ -503,7 +503,7 @@
         <div class="label text-third-text-color text-sm">Categories</div>
     </a>
     <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/archives">
-        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">15</div>
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">16</div>
         <div class="label text-third-text-color text-sm">Posts</div>
     </a>
 </div>
@@ -528,6 +528,99 @@
                 
                 <div class="flex flex-col gap-5 px-7 pb-7 pt-7">
                     <h3 class="home-article-title">
+                        <a href="/2026/08/13/DXE-Phase-3-UEFI-image-%E6%89%A7%E8%A1%8C%E4%B8%8E%E5%8A%A0%E8%BD%BD/">
+                            DXE Phase 3 UEFI image 执行与加载
+                        </a>
+                    </h3>
+
+                    <div class="home-article-content markdown-body">
+                        
+                            
+                            
+                        
+                    </div>
+
+                    <div class="home-article-meta-info-container">
+    <div class="home-article-meta-info">
+        <span><i class="fa-solid fa-calendars"></i>&nbsp;
+            <span class="home-article-date" data-date="Thu Aug 13 2026 14:14:47 GMT+0800">
+                
+                    2026-08-13
+                
+            </span>
+        </span>
+        
+            <span class="home-article-category">
+                <i class="fa-solid fa-folders"></i>&nbsp;
+            <ul>
+                
+                
+                    
+                        
+                        <li>
+                            <a href="/categories/BIOS/">BIOS</a>&nbsp;
+                        </li>
+                    
+                    
+                
+                    
+                        
+                            <li>></li>
+                        
+                        <li>
+                            <a href="/categories/BIOS/BIOS-Code/">BIOS Code</a>&nbsp;
+                        </li>
+                    
+                    
+                
+                    
+                        
+                            <li>></li>
+                        
+                        <li>
+                            <a href="/categories/BIOS/BIOS-Code/DXE/">DXE</a>&nbsp;
+                        </li>
+                    
+                    
+                
+            </ul>
+        </span>
+        
+        
+            <span class="home-article-tag">
+                <i class="fa-solid fa-tags"></i>&nbsp;
+                <ul>
+                    
+                        <li>
+                            
+                            <a href="/tags/DXE/">DXE</a>&nbsp;
+                        </li>
+                    
+                        <li>
+                            | 
+                            <a href="/tags/Code/">Code</a>&nbsp;
+                        </li>
+                    
+                </ul>
+            </span>
+        
+    </div>
+
+    <a href="/2026/08/13/DXE-Phase-3-UEFI-image-%E6%89%A7%E8%A1%8C%E4%B8%8E%E5%8A%A0%E8%BD%BD/">Read more<span class="seo-reader-text">DXE Phase 3 UEFI image 执行与加载</span>&nbsp;<i class="fa-solid fa-angle-right"></i></a>
+</div>
+
+                </div>
+            </li>
+        
+            <li class="home-article-item">
+
+                
+
+                
+
+                
+                <div class="flex flex-col gap-5 px-7 pb-7 pt-7">
+                    <h3 class="home-article-title">
                         <a href="/2026/08/12/DXE-Phase-2-DXE-dispatcher/">
                             DXE Phase 2 DXE dispatcher
                         </a>
@@ -536,7 +629,10 @@
                     <div class="home-article-content markdown-body">
                         
                             
-                            
+                             DXE Dispatcher 
+DXE Dispatcher 是 DXE Foundation 必不可少的一个重要组成部分。它的作用是寻找存放在 FV中的 DXE 驱动和 UEFI 驱动并以适当的顺序执行。DXE Dispatcher 如何确定适当的执行顺序呢？有两种办法：静态指定和动态确定。 
+静态指定 
+PI 规范规定，一个 FV 上可以有且最多只有一个执行顺序(a  priori)文...
                         
                     </div>
 
@@ -1376,104 +1472,6 @@ DEBUG 调用，这段代码的目的是方便调试者打印信息，当PEIM 安
                 </div>
             </li>
         
-            <li class="home-article-item">
-
-                
-
-                
-
-                
-                <div class="flex flex-col gap-5 px-7 pb-7 pt-7">
-                    <h3 class="home-article-title">
-                        <a href="/2026/07/30/PEI-Phase-3-PeiDispatcher/">
-                            PEI Phase (3) PeiDispatcher 1
-                        </a>
-                    </h3>
-
-                    <div class="home-article-content markdown-body">
-                        
-                            
-                            ​		PeiDispatcher 是peicore 的核心派遣逻辑，主要功能是发现并派遣PEIM，遍历全部peim，依次评估其依赖条件是否满足，满足则安装PEIM，知道没有可以加载的PEIM。同事peidispatcher也会检测物理内存是否安装，当发现物理内存时，则会将栈从临时内存切换到物理内存。
-dispatcher 流程图如下：
-
-PEIM 的在派遣过程的状态切换示意：
-
-dispat...
-                        
-                    </div>
-
-                    <div class="home-article-meta-info-container">
-    <div class="home-article-meta-info">
-        <span><i class="fa-solid fa-calendars"></i>&nbsp;
-            <span class="home-article-date" data-date="Thu Jul 30 2026 09:08:34 GMT+0800">
-                
-                    2026-07-30
-                
-            </span>
-        </span>
-        
-            <span class="home-article-category">
-                <i class="fa-solid fa-folders"></i>&nbsp;
-            <ul>
-                
-                
-                    
-                        
-                        <li>
-                            <a href="/categories/BIOS/">BIOS</a>&nbsp;
-                        </li>
-                    
-                    
-                
-                    
-                        
-                            <li>></li>
-                        
-                        <li>
-                            <a href="/categories/BIOS/BIOS-Code/">BIOS Code</a>&nbsp;
-                        </li>
-                    
-                    
-                
-                    
-                        
-                            <li>></li>
-                        
-                        <li>
-                            <a href="/categories/BIOS/BIOS-Code/PEI/">PEI</a>&nbsp;
-                        </li>
-                    
-                    
-                
-            </ul>
-        </span>
-        
-        
-            <span class="home-article-tag">
-                <i class="fa-solid fa-tags"></i>&nbsp;
-                <ul>
-                    
-                        <li>
-                            
-                            <a href="/tags/Code/">Code</a>&nbsp;
-                        </li>
-                    
-                        <li>
-                            | 
-                            <a href="/tags/PEI/">PEI</a>&nbsp;
-                        </li>
-                    
-                </ul>
-            </span>
-        
-    </div>
-
-    <a href="/2026/07/30/PEI-Phase-3-PeiDispatcher/">Read more<span class="seo-reader-text">PEI Phase (3) PeiDispatcher 1</span>&nbsp;<i class="fa-solid fa-angle-right"></i></a>
-</div>
-
-                </div>
-            </li>
-        
     </ul>
 
     <div class="home-paginator px-7 py-5">
@@ -1506,7 +1504,7 @@ dispat...
                 
                 <p class="post-count space-x-0.5">
                     <span>
-                        15 posts in total
+                        16 posts in total
                     </span>
                     
                 </p>
