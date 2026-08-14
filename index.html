@@ -408,7 +408,7 @@
         <div class="label text-third-text-color text-sm">Categories</div>
     </a>
     <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/archives">
-        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">16</div>
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">17</div>
         <div class="label text-third-text-color text-sm">Posts</div>
     </a>
 </div>
@@ -503,7 +503,7 @@
         <div class="label text-third-text-color text-sm">Categories</div>
     </a>
     <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/archives">
-        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">16</div>
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">17</div>
         <div class="label text-third-text-color text-sm">Posts</div>
     </a>
 </div>
@@ -528,6 +528,46 @@
                 
                 <div class="flex flex-col gap-5 px-7 pb-7 pt-7">
                     <h3 class="home-article-title">
+                        <a href="/2026/08/14/DXE-Phase-4-FV%E4%B8%8EFVB/">
+                            DXE Phase 4 FV与FVB
+                        </a>
+                    </h3>
+
+                    <div class="home-article-content markdown-body">
+                        
+                            
+                            
+                        
+                    </div>
+
+                    <div class="home-article-meta-info-container">
+    <div class="home-article-meta-info">
+        <span><i class="fa-solid fa-calendars"></i>&nbsp;
+            <span class="home-article-date" data-date="Fri Aug 14 2026 11:03:05 GMT+0800">
+                
+                    2026-08-14
+                
+            </span>
+        </span>
+        
+        
+    </div>
+
+    <a href="/2026/08/14/DXE-Phase-4-FV%E4%B8%8EFVB/">Read more<span class="seo-reader-text">DXE Phase 4 FV与FVB</span>&nbsp;<i class="fa-solid fa-angle-right"></i></a>
+</div>
+
+                </div>
+            </li>
+        
+            <li class="home-article-item">
+
+                
+
+                
+
+                
+                <div class="flex flex-col gap-5 px-7 pb-7 pt-7">
+                    <h3 class="home-article-title">
                         <a href="/2026/08/13/DXE-Phase-3-UEFI-image-%E6%89%A7%E8%A1%8C%E4%B8%8E%E5%8A%A0%E8%BD%BD/">
                             DXE Phase 3 UEFI image 执行与加载
                         </a>
@@ -536,7 +576,9 @@
                     <div class="home-article-content markdown-body">
                         
                             
-                            
+                            UEFI Image加载与执行Image是指一类包含可执行代码的文件。UEFI 规范规定，UEFI image采用微软公司定义的PE32+可执行文件格式。PE32+与 PE32 的区别在于前者支持 64 位代码。
+PE 和 COFF 文件格式规范专门为 UEFI 执行环境定义了四种 Subsystem
+1234567//// PE32+ Subsystem type for EFI imag...
                         
                     </div>
 
@@ -1373,105 +1415,6 @@ PeiSetBootMode  设...
                 </div>
             </li>
         
-            <li class="home-article-item">
-
-                
-
-                
-
-                
-                <div class="flex flex-col gap-5 px-7 pb-7 pt-7">
-                    <h3 class="home-article-title">
-                        <a href="/2026/07/31/PEI-Phase-4-dispatcher-2/">
-                            PEI Phase (4) PeiDispatcher 2
-                        </a>
-                    </h3>
-
-                    <div class="home-article-content markdown-body">
-                        
-                            
-                            PeiDispatcher 的几个重要函数PeiCheckAndSwitchStack (SecCoreData, Private);
-
-
-DEBUG 调用，这段代码的目的是方便调试者打印信息，当PEIM 安装了物理内存，系统运行的函数需要切换到物理内存当中，
-空的for循环目的是从栈底到第一个被改写的地址位置，记录空闲以及被占用的内存大小
-通过debug 把计算出来的信息输出。
-12345...
-                        
-                    </div>
-
-                    <div class="home-article-meta-info-container">
-    <div class="home-article-meta-info">
-        <span><i class="fa-solid fa-calendars"></i>&nbsp;
-            <span class="home-article-date" data-date="Fri Jul 31 2026 14:46:07 GMT+0800">
-                
-                    2026-07-31
-                
-            </span>
-        </span>
-        
-            <span class="home-article-category">
-                <i class="fa-solid fa-folders"></i>&nbsp;
-            <ul>
-                
-                
-                    
-                        
-                        <li>
-                            <a href="/categories/BIOS/">BIOS</a>&nbsp;
-                        </li>
-                    
-                    
-                
-                    
-                        
-                            <li>></li>
-                        
-                        <li>
-                            <a href="/categories/BIOS/BIOS-Code/">BIOS Code</a>&nbsp;
-                        </li>
-                    
-                    
-                
-                    
-                        
-                            <li>></li>
-                        
-                        <li>
-                            <a href="/categories/BIOS/BIOS-Code/PEI/">PEI</a>&nbsp;
-                        </li>
-                    
-                    
-                
-            </ul>
-        </span>
-        
-        
-            <span class="home-article-tag">
-                <i class="fa-solid fa-tags"></i>&nbsp;
-                <ul>
-                    
-                        <li>
-                            
-                            <a href="/tags/Code/">Code</a>&nbsp;
-                        </li>
-                    
-                        <li>
-                            | 
-                            <a href="/tags/PEI/">PEI</a>&nbsp;
-                        </li>
-                    
-                </ul>
-            </span>
-        
-    </div>
-
-    <a href="/2026/07/31/PEI-Phase-4-dispatcher-2/">Read more<span class="seo-reader-text">PEI Phase (4) PeiDispatcher 2</span>&nbsp;<i class="fa-solid fa-angle-right"></i></a>
-</div>
-
-                </div>
-            </li>
-        
     </ul>
 
     <div class="home-paginator px-7 py-5">
@@ -1504,7 +1447,7 @@ DEBUG 调用，这段代码的目的是方便调试者打印信息，当PEIM 安
                 
                 <p class="post-count space-x-0.5">
                     <span>
-                        16 posts in total
+                        17 posts in total
                     </span>
                     
                 </p>
