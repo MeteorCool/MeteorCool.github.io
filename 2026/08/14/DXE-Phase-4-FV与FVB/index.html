@@ -87,17 +87,18 @@
         
         <meta name="description" content="Hexo Theme Redefine, Redefine Your Hexo Journey.">
 <meta property="og:type" content="article">
-<meta property="og:title" content="DXE Phase （4） FV与FVB">
+<meta property="og:title" content="DXE Phase （4） FV与FVB 的信息介绍">
 <meta property="og:url" content="https://meteorcool.github.io/2026/08/14/DXE-Phase-4-FV%E4%B8%8EFVB/index.html">
 <meta property="og:site_name" content="Development Notes of Meteor">
 <meta property="og:description" content="Hexo Theme Redefine, Redefine Your Hexo Journey.">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://meteorcool.github.io/images/redefine-og.webp">
 <meta property="article:published_time" content="2026-08-14T03:03:05.000Z">
-<meta property="article:modified_time" content="2026-08-14T03:18:19.687Z">
+<meta property="article:modified_time" content="2026-09-22T01:54:11.004Z">
 <meta property="article:author" content="Meteor Liu">
-<meta property="article:tag" content="Code">
 <meta property="article:tag" content="DXE">
+<meta property="article:tag" content="FV">
+<meta property="article:tag" content="FVB">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://meteorcool.github.io/images/redefine-og.webp">
     
@@ -111,7 +112,7 @@
     
     <title>
         
-            DXE Phase （4） FV与FVB | Development Notes of Meteor
+            DXE Phase （4） FV与FVB 的信息介绍 | Development Notes of Meteor
         
     </title>
 
@@ -321,7 +322,7 @@
 
         <div class="statistics flex justify-around my-2.5">
     <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/tags">
-        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">11</div>
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">13</div>
         <div class="label text-third-text-color text-sm">Tags</div>
     </a>
     <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/categories">
@@ -352,7 +353,7 @@
 		<div class="article-title relative w-full">
 			
 			<div class="w-full flex items-center pt-6 justify-start">
-				<h1 class="article-title-regular text-second-text-color tracking-tight text-4xl md:text-6xl font-semibold px-2 sm:px-6 md:px-8 py-3">DXE Phase （4） FV与FVB</h1>
+				<h1 class="article-title-regular text-second-text-color tracking-tight text-4xl md:text-6xl font-semibold px-2 sm:px-6 md:px-8 py-3">DXE Phase （4） FV与FVB 的信息介绍</h1>
 			</div>
 			
 		</div>
@@ -380,8 +381,8 @@
     
         <span class="article-date article-meta-item">
             <i class="fa-regular fa-wrench"></i>&nbsp;
-            <span class="desktop">2026-08-14 11:18:19</span>
-            <span class="mobile">2026-08-14 11:18:19</span>
+            <span class="desktop">2026-09-22 09:54:11</span>
+            <span class="mobile">2026-09-22 09:54:11</span>
             <span class="hover-info">Updated</span>
         </span>
     
@@ -433,7 +434,11 @@
                     </li>
                 
                     <li>
-                        | <a href="/tags/Code/">Code</a>&nbsp;
+                        | <a href="/tags/FV/">FV</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/FVB/">FVB</a>&nbsp;
                     </li>
                 
             </ul>
@@ -455,21 +460,56 @@
 
 
 		<div class="article-content markdown-body px-2 sm:px-6 md:px-8 pb-8">
-			
+			<h5 id="FV-介绍："><a href="#FV-介绍：" class="headerlink" title="FV 介绍："></a>FV 介绍：</h5><p>Note: FV遍及整个BIOS启动流程，不单独属于DXE 模块，放在此处是后续会介绍DXE foundation 中对应protocol对 FV 的读写操作。</p>
+<p>​	FV &#x3D; Firmware volume，固件卷，是UEFI 规范定义的一种容器文件系统，BIOS 固件打包，存放所有固件模块的载体，对应的二进制文件后缀名通常为.fv 。</p>
+<p>FV就像一个固件专用的压缩包&#x2F;分区镜像，里面存放了DXE Driver，Pei module，FFS 文件 GUID 定义，固件卷头，校验信息，而BIOS 镜像由一个或者多个FV 组成。FV 本质是块结构的固件储存容器，可以放在Flash ROM，硬盘，内存中。</p>
+<p>​	根据PI 规范，FV 的基本结果如下：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/DXE-Phase-4-FV%E4%B8%8EFVB/image-20260922093249271.png"
+                      alt="image-20260922093249271"
+                ></p>
+<p>​	上图可以看出，一个FV 由多个 FF (FIRMWARE FILE)组成,每一个FF 都有一个header和一个或者多个section组成，而section内则是存放了PeiM,DXE driver等不同信息，具体由FV 的种类决定。</p>
+<p>​	FV 在BIOS 不同阶段起到的作用：</p>
+<ol>
+<li><strong>SEC 阶段</strong>：CPU 复位，SEC 从 SPI Flash 找到 FV 签名<code>_FVH</code>，定位 PEIFV</li>
+<li>SEC 读取 PEIFV，找到 PEI Core FFS，在 CAR（Cache as RAM）中加载 PEI Core</li>
+<li><strong>PEI 阶段</strong>：PEI Core 遍历 PEIFV 内所有 PEIM，逐个执行，初始化内存控制器，完成内存探测</li>
+<li>内存可用后，PEI 把 DXE FV 映射到内存，交出控制权</li>
+<li><strong>DXE 阶段</strong>：DXE Core 扫描 DXEFV，解析所有 DXE Driver 的 DEPEX 依赖，<strong>Core Dispatcher</strong>按需加载、启动驱动，安装 Protocol，枚举设备</li>
+<li>到 BDS 阶段，从 FV 读取 Setup、Logo、启动配置，进入启动设备选择</li>
+</ol>
+<h5 id="FVB介绍："><a href="#FVB介绍：" class="headerlink" title="FVB介绍："></a>FVB介绍：</h5><p>​	FVB &#x3D; Firmware Volume Block Protocol，固件卷块协议</p>
+<p>FV 是上层逻辑文件系统；FVB 是底层 Flash 块读写抽象层。FVB 直接操作 Flash 物理 Block，不关心里面是不是合法 FV&#x2F;FFS；FV Protocol 依赖 FVB 来读写 FV 里面的 FF 文件。</p>
+<p><strong>FVB 在BIOS各个流程的作用</strong></p>
+<ol>
+<li><p><strong>PEI 阶段</strong> PEI 扫描 SPI Flash，识别<code>_FVH</code>签名，解析 FV Header，生成 FV 信息 HOB（HobTypeFirmwareVolume），记录 FV 基地址、长度、BlockMap。 PEI 阶段读写 FV 用 <strong>FvInfoPPI</strong>，不是 FVB；FVB 是 DXE 阶段才安装的 Protocol。</p>
+</li>
+<li><p>DXE 阶段  FvbDxe（平台 FVB 驱动）遍历 PEI 传递过来的 FV HOB，为每一段 Flash FV 区域创建 Handle，<strong>在 Handle 上安装 FVB Protocol</strong>。</p>
+<p>一个 FV 对应一个 FVB 实例；ROM 里多个 FV（PEIFV、DXEFV、NVRAM_FV），就会生成多个 FVB Handle。</p>
+</li>
+<li><p><strong>FV Driver（FirmwareVolumeDxe）</strong> 遍历系统所有 FVB Handle，调用 FVB Read 读取 Flash 头部，校验<code>_FVH</code>签名。 如果头部是合法 FV，则<strong>在同一个 Handle 上额外安装 EFI_FIRMWARE_VOLUME2_PROTOCOL（FV Protocol）</strong>。 → 此时这个 Handle 同时存在 FVB（底层块）+ FV（上层文件系统）两套 Protocol。</p>
+</li>
+<li><p>上层使用者调用 FV Protocol 的 ReadFile&#x2F;WriteFile FV Protocol 内部解析 FFS、Section；需要修改 Flash 时，向下调用 FVB 的 EraseBlocks + Write。 UEFI NVRAM 变量、Capsule 固件升级，全部依赖 FVB 做 Flash 持久化写入。</p>
+<p>Note：<strong>NVRAM 变量分区本质就是一个特殊的 FV，靠 FVB 做擦写</strong>。</p>
+</li>
+</ol>
+
 		</div>
 
 		
 		<div class="post-copyright-info w-full my-8 px-2 sm:px-6 md:px-8">
 			<div class="article-copyright-info-container">
     <ul>
-        <li><strong>Title:</strong> DXE Phase （4） FV与FVB</li>
+        <li><strong>Title:</strong> DXE Phase （4） FV与FVB 的信息介绍</li>
         <li><strong>Author:</strong> Meteor Liu</li>
         <li><strong>Created at
                 :</strong> 2026-08-14 11:03:05</li>
         
             <li>
                 <strong>Updated at
-                    :</strong> 2026-08-14 11:18:19
+                    :</strong> 2026-09-22 09:54:11
             </li>
         
         <li>
@@ -499,7 +539,11 @@
 			</li>
 			
 			<li class="tag-item mx-0.5">
-				<a href="/tags/Code/">#Code</a>&nbsp;
+				<a href="/tags/FV/">#FV</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/FVB/">#FVB</a>&nbsp;
 			</li>
 			
 		</ul>
@@ -597,7 +641,7 @@
 		<div class="post-toc-wrap">
 	<div class="post-toc">
 		<div class="toc-title">On this page</div>
-		<div class="page-title">DXE Phase （4） FV与FVB</div>
+		<div class="page-title">DXE Phase （4） FV与FVB 的信息介绍</div>
 		
 
 	</div>
