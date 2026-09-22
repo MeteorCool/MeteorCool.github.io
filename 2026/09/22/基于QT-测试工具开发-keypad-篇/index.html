@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="keywords" content="BIOS,ARM,IPC,Notebook,Driver">
+    
+    
+    <meta name="author" content="Meteor Liu">
+    
+    <!-- Completely eliminate flash of wrong theme -->
+    <script>
+        (function() {
+            const THEME_KEY = "REDEFINE-THEME-STATUS";
+            const DARK = "dark", LIGHT = "light";
+            
+            // Get preferred theme
+            function getTheme() {
+                try {
+                    const saved = localStorage.getItem(THEME_KEY);
+                    if (saved) {
+                        const { isDark } = JSON.parse(saved);
+                        return isDark ? DARK : LIGHT;
+                    }
+                } catch (e) {}
+                
+                return matchMedia("(prefers-color-scheme: dark)").matches ? DARK : LIGHT;
+            }
+            
+            // Apply theme to document
+            function applyTheme(theme) {
+                const isDark = theme === DARK;
+                const root = document.documentElement;
+                
+                // Set classes for compatibility
+                root.classList.add(theme);
+                root.classList.remove(isDark ? LIGHT : DARK);
+                root.style.colorScheme = theme;
+            }
+            
+            // Initial application
+            const theme = getTheme();
+            applyTheme(theme);
+            
+            // Listen for system preference changes
+            matchMedia("(prefers-color-scheme: dark)").addEventListener("change", ({ matches }) => {
+                // Only update if using system preference (no localStorage entry)
+                if (!localStorage.getItem(THEME_KEY)) {
+                    applyTheme(matches ? DARK : LIGHT);
+                }
+            });
+            
+            // Set body classes ASAP (before DOMContentLoaded)
+            (function() {
+                const addBodyClass = () => {
+                    const b = document.body;
+                    if (!b) return false;
+                    b.classList.add(theme + "-mode");
+                    return true;
+                };
+
+                // Try immediately
+                if (addBodyClass()) return;
+
+                // Observe until body exists
+                const mo = new MutationObserver(() => {
+                    if (addBodyClass()) mo.disconnect();
+                });
+                mo.observe(document.documentElement, { childList: true, subtree: true });
+            })();
+        })();
+    </script>
+    
+    <!-- preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    
+    <!--- Seo Part-->
+    
+    <link rel="canonical" href="https://meteorcool.github.io/2026/09/22/基于qt-测试工具开发-keypad-篇/"/>
+    <meta name="robots" content="index,follow">
+    <meta name="googlebot" content="index,follow">
+    <meta name="revisit-after" content="1 days">
+    
+    
+        
+        <meta name="description" content="Hexo Theme Redefine, Redefine Your Hexo Journey.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于QT 测试工具开发  keypad 篇">
+<meta property="og:url" content="https://meteorcool.github.io/2026/09/22/%E5%9F%BA%E4%BA%8EQT-%E6%B5%8B%E8%AF%95%E5%B7%A5%E5%85%B7%E5%BC%80%E5%8F%91-keypad-%E7%AF%87/index.html">
+<meta property="og:site_name" content="Development Notes of Meteor">
+<meta property="og:description" content="Hexo Theme Redefine, Redefine Your Hexo Journey.">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://meteorcool.github.io/images/redefine-og.webp">
+<meta property="article:published_time" content="2026-09-22T05:52:32.097Z">
+<meta property="article:modified_time" content="2026-09-22T06:58:35.552Z">
+<meta property="article:author" content="Meteor Liu">
+<meta property="article:tag" content="QT">
+<meta property="article:tag" content="c++">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://meteorcool.github.io/images/redefine-og.webp">
+    
+    
+    <!--- Icon Part-->
+    <link rel="icon" type="image/png" href="/images/1710300-795548.svg" sizes="192x192">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/1710300-795548.svg">
+    <meta name="theme-color" content="#009688">
+    <link rel="shortcut icon" href="/images/1710300-795548.svg">
+    <!--- Page Info-->
+    
+    <title>
+        
+            基于QT 测试工具开发  keypad 篇 | Development Notes of Meteor
+        
+    </title>
+
+    
+<link rel="stylesheet" href="/fonts/Chillax/chillax.css">
+
+
+    <!--- Inject Part-->
+    
+
+    
+<link rel="stylesheet" href="/css/style.css">
+
+
+    
+        
+<link rel="stylesheet" href="/css/build/tailwind.css">
+
+    
+
+    
+<link rel="stylesheet" href="/fonts/GeistMono/geist-mono.css">
+
+    
+<link rel="stylesheet" href="/fonts/Geist/geist.css">
+
+    <!--- Font Part-->
+    
+    
+    
+    
+    
+    
+
+    <script id="hexo-configurations">
+    window.config = {"hostname":"meteorcool.github.io","root":"/","language":"en"};
+    window.theme = {"articles":{"style":{"font_size":"16px","line_height":1.5,"image_border_radius":"14px","image_alignment":"center","image_caption":false,"link_icon":true,"delete_mask":false,"title_alignment":"left","headings_top_spacing":{"h1":"3.2rem","h2":"2.4rem","h3":"1.9rem","h4":"1.6rem","h5":"1.4rem","h6":"1.3rem"}},"word_count":{"enable":true,"count":true,"min2read":true},"author_label":{"enable":true,"auto":false,"list":[]},"code_block":{"copy":true,"style":"mac","highlight_theme":{"light":"github","dark":"vs2015"},"font":{"enable":false,"family":null,"url":null}},"toc":{"enable":true,"max_depth":3,"number":false,"expand":true,"init_open":true},"copyright":{"enable":true,"default":"cc_by_nc_sa"},"lazyload":true,"pangu_js":false,"recommendation":{"enable":false,"title":"推荐阅读","limit":3,"mobile_limit":2,"placeholder":"/images/wallhaven-wqery6-light.webp","skip_dirs":[]}},"colors":{"primary":"#009688","secondary":null,"default_mode":"light"},"global":{"fonts":{"chinese":{"enable":false,"family":null,"url":null},"english":{"enable":false,"family":null,"url":null},"title":{"enable":false,"family":null,"url":null}},"content_max_width":"1000px","sidebar_width":"210px","hover":{"shadow":true,"scale":false},"scroll_progress":{"bar":false,"percentage":true},"website_counter":{"url":"https://cn.vercount.one/js","enable":false,"site_pv":true,"site_uv":true,"post_pv":true},"single_page":true,"preloader":{"enable":false,"custom_message":null},"side_tools":{"gear_rotation":true,"auto_expand":false},"open_graph":{"enable":true,"image":"/images/redefine-og.webp","description":"Hexo Theme Redefine, Redefine Your Hexo Journey."},"google_analytics":{"enable":false,"id":null}},"home_banner":{"enable":true,"style":"fixed","image":{"light":"/images/saihu.jpg","dark":"/images/showmountain.jpg"},"title":"Development Notes of Meteor","subtitle":{"text":["记录与分享","BIOS 技术记录","ARM 开发笔记"],"hitokoto":{"enable":false,"show_author":false,"api":"https://v1.hitokoto.cn"},"typing_speed":100,"backing_speed":80,"starting_delay":500,"backing_delay":1500,"loop":true,"smart_backspace":true},"text_color":{"light":"#fff","dark":"#d1d1b6"},"text_style":{"title_size":"2.8rem","subtitle_size":"1.5rem","line_height":1.2},"custom_font":{"enable":false,"family":null,"url":null},"social_links":{"enable":false,"style":"default","links":[{"icon":"fa-brands fa-github","url":null},{"icon":"fa-brands fa-twitter","url":null},{"icon":"fa-solid fa-at","url":"meteor.liu@petalmail.com"},{"icon":"fa-brands fa-telegram","url":null},{"icon":"/images/custom-icon.svg","url":null}],"qrs":[{"icon":"fa-brands fa-weixin","qr":null},{"icon":"/images/custom-icon.svg","qr":null}]}},"plugins":{"feed":{"enable":false},"aplayer":{"enable":false,"type":"fixed","audios":[{"name":null,"artist":null,"url":null,"cover":null,"lrc":null}]},"mermaid":{"enable":false,"version":"11.4.1","theme":{"light":"default","dark":"dark"}}},"version":"2.9.0","navbar":{"auto_hide":false,"color":{"left":"#f78736","right":"#367df7","transparency":35},"width":{"home":"1200px","pages":"1000px"},"links":{"Home":{"path":"/","icon":"fa-regular fa-house"}},"search":{"enable":false,"preload":true}},"page_templates":{"friends_column":2,"tags_style":"blur","masonry":{"batch_size":12,"initial_batch_size":24}},"home":{"sidebar":{"enable":true,"position":"left","first_item":"menu","announcement":null,"show_on_mobile":true,"links":{"Archives":{"path":"/archives","icon":"fa-regular fa-box-archive","class":"menu-archive"},"EC":{"path":"/categories/EC/","icon":"fa-solid fa-server","class":"menu-ec"},"ARM":{"path":"/categories/ARM/","icon":"fa-solid fa-microchip","class":"menu-arm"},"BIOS":{"path":"/categories/BIOS/","icon":"fa-solid fa-memory","class":"menu-bios"},"Other":{"path":"/categories/Other/","icon":"fa-solid fa-file-lines","class":"menu-other"}}},"article_date_format":"auto","excerpt_length":200,"categories":{"enable":true,"limit":3},"tags":{"enable":true,"limit":3}},"footer":{"runtime":true,"icon":"<i class=\"fa-solid fa-heart fa-beat\" style=\"--fa-animation-duration: 0.5s; color: #f54545\"></i>","start":"2022/8/17 11:45:14","statistics":true,"customize":"BIOS · EC · ARM  /IPC * Notebook | Powered‑by‑Meteor Liu","icp":{"enable":false,"number":null,"url":null}},"footerStart":"2022/8/17 11:45:14","mermaid":{"style":{"light":"default","dark":"dark"}}};
+    window.lang_ago = {"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days ago","week":"%s weeks ago","month":"%s months ago","year":"%s years ago"};
+    window.i18n = {"search":"Search...","toc":"On this page","prev":"Prev","next":"Next","prev_posts":"Prev posts","next_posts":"Next posts","page":"Page %d","recent_posts":"Recent Posts","share":"Share","powered_by":"POWERED BY %s","theme":"THEME","rss_feed":"RSS Feed","category":"Category","categories":"Categories","tag":"Tag","tags":"Tags","post":"Post","posts":"Posts","tagcloud":"Tag Cloud","comment":"Comment","comments":"Comments","home":"Home","archive":"Archive","archives":"Archives","top":"TOP","sticky":"Sticky","go-back-home":"Go Back Home","masonry_loading":"Loading photos...","image_viewer":"Image viewer","close":"Close","exif":{"title":"EXIF","cards":{"camera":"Camera","lens":"Lens","exposure":"Exposure","other":"Other"},"fields":{"make":"Brand","model":"Model","date_taken":"Date taken","lens_model":"Lens","focal_length":"Focal length","focus_mode":"Focus mode","shutter":"Shutter","aperture":"Aperture","iso":"ISO","exposure_program":"Exposure program","exposure_compensation":"Exposure compensation","metering_mode":"Metering mode","flash":"Flash","white_balance":"White balance","latitude":"Latitude","longitude":"Longitude","altitude":"Altitude"},"status":{"loading":"Loading...","no_exif":"No EXIF available","library_missing":"EXIF library not loaded","image_source_missing":"Image source unavailable","unavailable":"EXIF unavailable (blocked by CORS or missing metadata)","flag_unavailable":"EXIF unavailable"}},"about":"About","changelog":"Changelog","links":"Links","link":"Link","friends":"Friends","friend":"Friend","timeline":"Timeline","shuoshuo":"Shuoshuo","bookmarks":"Bookmarks","site_uv":"VISITOR COUNT","site_pv":"TOTAL PAGE VIEWS","read_more":"Read more","wordcount":"Words","min2read":"Mins","status":"Status","runtime":"Blog up for","days":"days","hours":"hrs","minutes":"Min","seconds":"Sec","optimized_by":"and Optimized by Evan","rights":"All Rights Reserved","site_posts":"%s posts in total","site_wordcount":"%s words in total","copyright":{"author":"Author","title":"Title","link":"Link","create_time":"Created at","update_time":"Updated at","license_title":"License","license_content":"This work is licensed under %s.","all_rights_reserved":"All Rights Reserved &#169; %s","public_domain":"This work is in the public domain."},"ago":{"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days ago","week":"%s weeks ago","month":"%s months ago","year":"%s years ago"},"create_time":"Created","update_time":"Updated","expired":"This post is written %s days ago, and the content may not be up to date."};
+    window.data = {"masonry":false};
+  </script>
+    
+    <!--- Fontawesome Part-->
+    
+<link rel="stylesheet" href="/fontawesome/fontawesome.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/brands.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/solid.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/regular.min.css">
+
+    
+    
+    
+    
+</head>
+
+
+<body>
+	<div class="progress-bar-container">
+	
+
+	
+	<span class="pjax-progress-bar"></span>
+	<!--        <span class="swup-progress-icon">-->
+	<!--            <i class="fa-solid fa-circle-notch fa-spin"></i>-->
+	<!--        </span>-->
+	
+</div>
+
+<main class="page-container" id="swup">
+
+	
+
+	<div class="main-content-container flex flex-col justify-between min-h-dvh">
+		<div class="main-content-header">
+			<header class="navbar-container px-6 md:px-12">
+    <div class="navbar-content transition-navbar ">
+        <div class="left">
+            
+            <a class="logo-title" href="/">
+                
+                Development Notes of Meteor
+                
+            </a>
+        </div>
+
+        <div class="right">
+            <!-- PC -->
+            <div class="desktop">
+                <ul class="navbar-list">
+                    
+                        
+                            
+
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class=""
+                                   href="/"
+                                        >
+                                    <i class="fa-regular fa-house fa-fw"></i>
+                                    HOME
+                                    
+                                </a>
+
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                    
+                </ul>
+            </div>
+            <!-- Mobile -->
+            <div class="mobile">
+                
+                <div class="icon-item navbar-bar">
+                    <div class="navbar-bar-middle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile sheet -->
+    <div class="navbar-drawer h-dvh w-full absolute top-0 left-0 bg-background-color flex flex-col justify-between">
+        <ul class="drawer-navbar-list flex flex-col px-4 justify-center items-start">
+            
+                
+                    
+
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full "
+                           href="/"
+                        >
+                            <span>
+                                HOME
+                            </span>
+                            
+                                <i class="fa-regular fa-house fa-sm fa-fw"></i>
+                            
+                        </a>
+                        
+
+                        
+                    </li>
+            
+
+            
+            
+                
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/archives"
+                        >
+                            <span>Archives</span>
+                            <i class="fa-regular fa-box-archive fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/categories/EC/"
+                        >
+                            <span>EC</span>
+                            <i class="fa-solid fa-server fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/categories/ARM/"
+                        >
+                            <span>ARM</span>
+                            <i class="fa-solid fa-microchip fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/categories/BIOS/"
+                        >
+                            <span>BIOS</span>
+                            <i class="fa-solid fa-memory fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/categories/Other/"
+                        >
+                            <span>Other</span>
+                            <i class="fa-solid fa-file-lines fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+            
+        </ul>
+
+        <div class="statistics flex justify-around my-2.5">
+    <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/tags">
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">13</div>
+        <div class="label text-third-text-color text-sm">Tags</div>
+    </a>
+    <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/categories">
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">9</div>
+        <div class="label text-third-text-color text-sm">Categories</div>
+    </a>
+    <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/archives">
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">20</div>
+        <div class="label text-third-text-color text-sm">Posts</div>
+    </a>
+</div>
+    </div>
+
+    <div class="window-mask"></div>
+
+</header>
+
+
+		</div>
+
+		<div class="main-content-body transition-fade-up">
+			
+
+			<div class="main-content">
+				<div class="post-page-container flex relative justify-between box-border w-full h-full">
+	<div class="article-content-container">
+
+		<div class="article-title relative w-full">
+			
+			<div class="w-full flex items-center pt-6 justify-start">
+				<h1 class="article-title-regular text-second-text-color tracking-tight text-4xl md:text-6xl font-semibold px-2 sm:px-6 md:px-8 py-3">基于QT 测试工具开发  keypad 篇</h1>
+			</div>
+			
+		</div>
+
+		
+		<div class="article-header flex flex-row gap-2 items-center px-2 sm:px-6 md:px-8">
+			<div class="avatar w-[46px] h-[46px] shrink-0 rounded-medium border border-border-color p-px">
+				<img src="/images/avatar.jpg">
+			</div>
+			<div class="info flex flex-col justify-between">
+				<div class="author flex items-center">
+					<span class="name text-default-text-color text-lg font-semibold">Meteor Liu</span>
+					
+					<span class="author-label ml-1.5 text-xs px-2 py-0.5 rounded-small text-third-text-color border border-shadow-color-1">Lv3</span>
+					
+				</div>
+				<div class="meta-info">
+					<div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fa-regular fa-pen-fancy"></i>&nbsp;
+        <span class="desktop">2026-09-22 13:52:32</span>
+        <span class="mobile">2026-09-22 13:52:32</span>
+        <span class="hover-info">Created</span>
+    </span>
+    
+        <span class="article-date article-meta-item">
+            <i class="fa-regular fa-wrench"></i>&nbsp;
+            <span class="desktop">2026-09-22 14:58:35</span>
+            <span class="mobile">2026-09-22 14:58:35</span>
+            <span class="hover-info">Updated</span>
+        </span>
+    
+
+    
+    
+        <span class="article-tags article-meta-item">
+            <i class="fa-regular fa-tags"></i>&nbsp;
+            <ul>
+                
+                    <li>
+                        <a href="/tags/QT/">QT</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/c/">c++</a>&nbsp;
+                    </li>
+                
+            </ul>
+        </span>
+    
+
+    
+    
+    
+    
+</div>
+
+				</div>
+			</div>
+		</div>
+		
+
+		
+
+
+		<div class="article-content markdown-body px-2 sm:px-6 md:px-8 pb-8">
+			<p>QT 版本</p>
+<p> <img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/%E5%9F%BA%E4%BA%8EQT-%E6%B5%8B%E8%AF%95%E5%B7%A5%E5%85%B7%E5%BC%80%E5%8F%91-keypad-%E7%AF%87/image-20260922141956073.png"
+                      alt="image-20260922141956073"
+                ></p>
+<p>QT 环境 Ubuntu NXP 环境</p>
+<p>QT UI 界面如下：</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="../images/%E5%9F%BA%E4%BA%8EQT-%E6%B5%8B%E8%AF%95%E5%B7%A5%E5%85%B7%E5%BC%80%E5%8F%91-keypad-%E7%AF%87/image-20260922142049305.png"
+                      alt="image-20260922142049305" style="zoom:67%;" 
+                >
+
+<p>功能介绍，工业主板上有keypad按键，布局类似UI 界面，可以通过按下keypad 后UI 界面显示对应的状态，X,Y,Z 三轴则是短按自增1或者自减1，长按则是连续快速增加或者减少</p>
+<p>按键图标通过qrc 资源将图片添加到UI界面</p>
+<p>功能实现：硬件上一共留有18个gpio 链接到keypad 18 个按键上，首先需要在Kernel的DTS 将对应的GPIO 定义成input，结合硬件设计，设计为active low，具体定义如下：</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br></pre></td><td class="code"><pre><span class="line">	keypads&#123;</span><br><span class="line">		compatible = &quot;gpio-keys&quot;;</span><br><span class="line">		pinctrl-0 = &lt;&amp;pinctrl_keypad&gt;;</span><br><span class="line">		pinctrl-names = &quot;default&quot;;</span><br><span class="line">		#address-cells = &lt;1&gt;;</span><br><span class="line">		#size-cells = &lt;0&gt;;</span><br><span class="line"></span><br><span class="line">		kpdata0&#123;</span><br><span class="line">			label = &quot;kpdata0&quot;;</span><br><span class="line">			linux,code = &lt;KEY_F1&gt;;</span><br><span class="line">			gpios = &lt;&amp;gpio2 0 GPIO_ACTIVE_LOW&gt;;</span><br><span class="line">		&#125;;</span><br><span class="line"></span><br><span class="line">		kpdata1&#123;</span><br><span class="line">			label = &quot;kpdata1&quot;;</span><br><span class="line">			linux,code = &lt;KEY_F2&gt;;</span><br><span class="line">			gpios = &lt;&amp;gpio2 1 GPIO_ACTIVE_LOW&gt;;</span><br><span class="line">		&#125;;</span><br><span class="line"></span><br><span class="line">		kpdata2&#123;</span><br><span class="line">			label = &quot;kpdata2&quot;;</span><br><span class="line">			linux,code = &lt;KEY_F3&gt;;</span><br><span class="line">			gpios = &lt;&amp;gpio2 2 GPIO_ACTIVE_LOW&gt;;</span><br><span class="line">		&#125;;</span><br><span class="line"></span><br><span class="line">		kpdata3&#123;</span><br><span class="line">			label = &quot;kpdata3&quot;;</span><br><span class="line">			linux,code = &lt;KEY_F4&gt;;</span><br><span class="line">			gpios = &lt;&amp;gpio2 3 GPIO_ACTIVE_LOW&gt;;</span><br><span class="line">		&#125;;</span><br><span class="line"></span><br><span class="line">		kpdata4&#123;</span><br><span class="line">			label = &quot;kpdata4&quot;;</span><br><span class="line">			linux,code = &lt;KEY_F5&gt;;</span><br><span class="line">			gpios = &lt;&amp;gpio2 4 GPIO_ACTIVE_LOW&gt;;</span><br><span class="line">		&#125;;</span><br><span class="line"></span><br><span class="line">		kpdata5&#123;</span><br><span class="line">			label = &quot;kpdata5&quot;;</span><br><span class="line">			linux,code = &lt;KEY_F6&gt;;</span><br><span class="line">			gpios = &lt;&amp;gpio2 5 GPIO_ACTIVE_LOW&gt;;</span><br><span class="line">		&#125;;</span><br><span class="line"></span><br><span class="line">		kpdata6&#123;</span><br><span class="line">			label = &quot;kpdata6&quot;;</span><br><span class="line">			linux,code = &lt;KEY_RIGHT&gt;;</span><br><span class="line">			gpios = &lt;&amp;gpio2 8 GPIO_ACTIVE_LOW&gt;;</span><br><span class="line">		&#125;;</span><br><span class="line"></span><br><span class="line">		kpdata7&#123;</span><br><span class="line">			label = &quot;kpdata7&quot;;</span><br><span class="line">			linux,code = &lt;KEY_ENTER&gt;;</span><br><span class="line">			gpios = &lt;&amp;gpio2 9 GPIO_ACTIVE_LOW&gt;;</span><br><span class="line">		&#125;;</span><br><span class="line">//X_axis &quot;+&quot;</span><br><span class="line">		kpdata8&#123;</span><br><span class="line">			label = &quot;kpdata8&quot;;</span><br><span class="line">			linux,code = &lt;KEY_W&gt;;</span><br><span class="line">			gpios = &lt;&amp;gpio2 10 GPIO_ACTIVE_LOW&gt;;</span><br><span class="line">			linux,repeat-delay = &lt;500&gt;;</span><br><span class="line">			linux,rep = &lt;1&gt;;</span><br><span class="line">		&#125;;</span><br><span class="line">//Y_axis &quot;+&quot;</span><br><span class="line">		kpdata9&#123;</span><br><span class="line">			label = &quot;kpdata9&quot;;</span><br><span class="line">			linux,code = &lt;KEY_E&gt;;</span><br><span class="line">			gpios = &lt;&amp;gpio2 11 GPIO_ACTIVE_LOW&gt;;</span><br><span class="line">			linux,repeat-delay = &lt;500&gt;;</span><br><span class="line">			linux,rep = &lt;1&gt;;</span><br><span class="line">		&#125;;</span><br><span class="line">//Z_axis &quot;+&quot;</span><br><span class="line">		kpdata10&#123;</span><br><span class="line">			label = &quot;kpdata10&quot;;</span><br><span class="line">			linux,code = &lt;KEY_R&gt;;</span><br><span class="line">			gpios = &lt;&amp;gpio2 12 GPIO_ACTIVE_LOW&gt;;</span><br><span class="line">			linux,repeat-delay = &lt;500&gt;;</span><br><span class="line">			linux,rep = &lt;1&gt;;</span><br><span class="line">		&#125;;</span><br><span class="line">//X_axis &quot;-&quot;</span><br><span class="line">		kpdata11&#123;</span><br><span class="line">			label = &quot;kpdata11&quot;;</span><br><span class="line">			linux,code = &lt;KEY_S&gt;;</span><br><span class="line">			gpios = &lt;&amp;gpio2 13 GPIO_ACTIVE_LOW&gt;;</span><br><span class="line">			linux,repeat-delay = &lt;500&gt;;</span><br><span class="line">			linux,rep = &lt;1&gt;;</span><br><span class="line">		&#125;;</span><br><span class="line">//Y_axis &quot;-&quot;</span><br><span class="line">		kpdata12&#123;</span><br><span class="line">			label = &quot;kpdata12&quot;;</span><br><span class="line">			linux,code = &lt;KEY_D&gt;;</span><br><span class="line">			gpios = &lt;&amp;gpio2 16 GPIO_ACTIVE_LOW&gt;;</span><br><span class="line">			linux,repeat-delay = &lt;500&gt;;</span><br><span class="line">			linux,rep = &lt;1&gt;;</span><br><span class="line">		&#125;;</span><br><span class="line">//Z_axis &quot;-&quot;</span><br><span class="line">		kpdata13&#123;</span><br><span class="line">			label = &quot;kpdata13&quot;;</span><br><span class="line">			linux,code = &lt;KEY_F&gt;;</span><br><span class="line">			gpios = &lt;&amp;gpio2 17 GPIO_ACTIVE_LOW&gt;;</span><br><span class="line">			linux,repeat-delay = &lt;500&gt;;</span><br><span class="line">			linux,rep = &lt;1&gt;;</span><br><span class="line">		&#125;;</span><br><span class="line"></span><br><span class="line">		kpdata14&#123;</span><br><span class="line">			label = &quot;kpdata14&quot;;</span><br><span class="line">			linux,code = &lt;KEY_UP&gt;;</span><br><span class="line">			gpios = &lt;&amp;gpio2 20 GPIO_ACTIVE_LOW&gt;;</span><br><span class="line">		&#125;;</span><br><span class="line"></span><br><span class="line">		kpdata15&#123;</span><br><span class="line">			label = &quot;kpdata15&quot;;</span><br><span class="line">			linux,code = &lt;KEY_ESC&gt;;</span><br><span class="line">			gpios = &lt;&amp;gpio2 21 GPIO_ACTIVE_LOW&gt;;</span><br><span class="line">		&#125;;</span><br><span class="line"></span><br><span class="line">		kpdata16&#123;</span><br><span class="line">			label = &quot;kpdata16&quot;;</span><br><span class="line">			linux,code = &lt;KEY_DOWN&gt;;</span><br><span class="line">			gpios = &lt;&amp;gpio2 26 GPIO_ACTIVE_LOW&gt;;</span><br><span class="line">		&#125;;</span><br><span class="line"></span><br><span class="line">		kpdata17&#123;</span><br><span class="line">			label = &quot;kpdata17&quot;;</span><br><span class="line">			linux,code = &lt;KEY_LEFT&gt;;</span><br><span class="line">			gpios = &lt;&amp;gpio2 28 GPIO_ACTIVE_LOW&gt;;</span><br><span class="line">		&#125;;</span><br><span class="line"></span><br><span class="line">	&#125;;</span><br><span class="line">	</span><br><span class="line">	...</span><br><span class="line">	...</span><br><span class="line">	...</span><br><span class="line">	</span><br><span class="line">		pinctrl_keypad:keypadgrp&#123;</span><br><span class="line">		fsl,pins = &lt;</span><br><span class="line">		IMX95_PAD_GPIO_IO00__GPIO2_IO_BIT0			0x176</span><br><span class="line">		IMX95_PAD_GPIO_IO01__GPIO2_IO_BIT1			0x176</span><br><span class="line">		IMX95_PAD_GPIO_IO02__GPIO2_IO_BIT2			0x176</span><br><span class="line">		IMX95_PAD_GPIO_IO03__GPIO2_IO_BIT3			0x176</span><br><span class="line">		IMX95_PAD_GPIO_IO04__GPIO2_IO_BIT4			0x176</span><br><span class="line">		IMX95_PAD_GPIO_IO05__GPIO2_IO_BIT5			0x176</span><br><span class="line">		IMX95_PAD_GPIO_IO08__GPIO2_IO_BIT8			0x176</span><br><span class="line">		IMX95_PAD_GPIO_IO09__GPIO2_IO_BIT9			0x176</span><br><span class="line">		IMX95_PAD_GPIO_IO10__GPIO2_IO_BIT10			0x176</span><br><span class="line">		IMX95_PAD_GPIO_IO11__GPIO2_IO_BIT11			0x176</span><br><span class="line">		IMX95_PAD_GPIO_IO12__GPIO2_IO_BIT12			0x176</span><br><span class="line">		IMX95_PAD_GPIO_IO13__GPIO2_IO_BIT13			0x176</span><br><span class="line">		IMX95_PAD_GPIO_IO16__GPIO2_IO_BIT16			0x176</span><br><span class="line">		IMX95_PAD_GPIO_IO17__GPIO2_IO_BIT17			0x176</span><br><span class="line">		IMX95_PAD_GPIO_IO20__GPIO2_IO_BIT20			0x176</span><br><span class="line">		IMX95_PAD_GPIO_IO21__GPIO2_IO_BIT21			0x176</span><br><span class="line">		IMX95_PAD_GPIO_IO26__GPIO2_IO_BIT26			0x176</span><br><span class="line">		IMX95_PAD_GPIO_IO28__GPIO2_IO_BIT28			0x176</span><br><span class="line">		&gt;;</span><br><span class="line">	&#125;;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p> 按键的功能定义如上，其中六个axis由于需要支持长按重复触发，增加属性linux,repeat-delay &#x3D; &lt;500&gt;;即长按超过500ms后可重复触发。</p>
+<p>widget.h 包含了需要的头文件，以及需要实现功能的函数定义</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">#ifndef WIDGET_H</span><br><span class="line">#define WIDGET_H</span><br><span class="line"></span><br><span class="line">#include &lt;QWidget&gt;</span><br><span class="line">#include &lt;QKeyEvent&gt;</span><br><span class="line">#include &lt;QLabel&gt;</span><br><span class="line">#include &lt;QProcess&gt;</span><br><span class="line">#include &lt;QDebug&gt;</span><br><span class="line">#include &lt;QEvent&gt;</span><br><span class="line"></span><br><span class="line">QT_BEGIN_NAMESPACE</span><br><span class="line">namespace Ui &#123; class Widget; &#125;</span><br><span class="line">QT_END_NAMESPACE</span><br><span class="line"></span><br><span class="line">class Widget : public QWidget</span><br><span class="line">&#123;</span><br><span class="line">    Q_OBJECT</span><br><span class="line"></span><br><span class="line">public:</span><br><span class="line">    Widget(QWidget *parent = nullptr);</span><br><span class="line">    ~Widget() override;</span><br><span class="line">    void setstatusLed(QLabel* label,int color, int size);</span><br><span class="line">    void joystick_XYZ_Value(QLabel* label,int axis);</span><br><span class="line">    void keyPressEvent(QKeyEvent *event) override;</span><br><span class="line">    void keyReleaseEvent(QKeyEvent *event) override;</span><br><span class="line">    bool checkGPIOStatus();</span><br><span class="line"></span><br><span class="line">private slots:</span><br><span class="line">    void on_pushButton_clicked();</span><br><span class="line"></span><br><span class="line">private:</span><br><span class="line">    Ui::Widget *ui;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">#endif</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p>main.cpp 则是基础的QT 函数模式：</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">#include &quot;widget.h&quot;</span><br><span class="line"></span><br><span class="line">#include &lt;QApplication&gt;</span><br><span class="line"></span><br><span class="line">int main(int argc, char *argv[])</span><br><span class="line">&#123;</span><br><span class="line">    QApplication a(argc, argv);</span><br><span class="line">    Widget w;</span><br><span class="line">    w.show();</span><br><span class="line">    return a.exec();</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p>widget.cpp 完整的实现了测试工具，代码与解析如下：</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br></pre></td><td class="code"><pre><span class="line">#include &quot;widget.h&quot;</span><br><span class="line">#include &quot;ui_widget.h&quot;</span><br><span class="line"></span><br><span class="line">//#include &lt;QGuiApplication&gt;</span><br><span class="line"></span><br><span class="line">Widget::Widget(QWidget *parent)</span><br><span class="line">    : QWidget(parent)</span><br><span class="line">    , ui(new Ui::Widget)</span><br><span class="line">&#123;</span><br><span class="line">//==== QT UI 标准操作，把 ui 文件上拖拽的所有控件创建并挂载到当前 Widget 窗口  ====//</span><br><span class="line">    ui-&gt;setupUi(this);		</span><br><span class="line">//==== 设置初始化标题信息  ====//</span><br><span class="line">    this-&gt;setWindowTitle(&quot;Keypad Test&quot;);</span><br><span class="line">//==== 设置初始化窗口样式，浅灰色  ====//</span><br><span class="line">    this-&gt;setStyleSheet(&quot;background:lightgray;&quot;);</span><br><span class="line">//==== 初始化 12 个 LED label 标签，默认状态红色，大小 30px；调用自定义函数setstatusLed绘制为圆形 LED。</span><br><span class="line">    //LED status default is red</span><br><span class="line">    setstatusLed(ui-&gt;label_icon1_status, 1, 30);</span><br><span class="line">    setstatusLed(ui-&gt;label_icon2_status, 1, 30);</span><br><span class="line">    setstatusLed(ui-&gt;label_icon3_status, 1, 30);</span><br><span class="line">    setstatusLed(ui-&gt;label_icon4_status, 1, 30);</span><br><span class="line">    setstatusLed(ui-&gt;label_icon5_status, 1, 30);</span><br><span class="line">    setstatusLed(ui-&gt;label_icon6_status, 1, 30);</span><br><span class="line">    setstatusLed(ui-&gt;label_icon7_status, 1, 30);</span><br><span class="line">    setstatusLed(ui-&gt;label_icon8_status, 1, 30);</span><br><span class="line">    setstatusLed(ui-&gt;label_icon9_status, 1, 30);</span><br><span class="line">    setstatusLed(ui-&gt;label_icon10_status, 1, 30);</span><br><span class="line">    setstatusLed(ui-&gt;label_icon11_status, 1, 30);</span><br><span class="line">    setstatusLed(ui-&gt;label_icon12_status, 1, 30);</span><br><span class="line">//==== 由于这个APP 在两个不同的sku上使用，其中一个带有摇杆，没有axis的六个按键，此处对摇杆是否连接进行判断，从而是否隐藏按键  ====//</span><br><span class="line">//==== 调用checkGPIOStatus()读取 GPIO 状态，返回 bool 变量joystickconnect ====//</span><br><span class="line">    bool joystickconnect = checkGPIOStatus();</span><br><span class="line">    if (joystickconnect) &#123;</span><br><span class="line">        ui-&gt;label_21-&gt;setVisible(false);</span><br><span class="line">        ui-&gt;label_22-&gt;setVisible(false);</span><br><span class="line">        ui-&gt;label_23-&gt;setVisible(false);</span><br><span class="line">        ui-&gt;label_icon7-&gt;setVisible(false);</span><br><span class="line">        ui-&gt;label_icon8-&gt;setVisible(false);</span><br><span class="line">        ui-&gt;label_icon9-&gt;setVisible(false);</span><br><span class="line">        ui-&gt;label_icon10-&gt;setVisible(false);</span><br><span class="line">        ui-&gt;label_icon11-&gt;setVisible(false);</span><br><span class="line">        ui-&gt;label_icon12-&gt;setVisible(false);</span><br><span class="line">        ui-&gt;label_X_axis_value-&gt;setVisible(false);</span><br><span class="line">        ui-&gt;label_Y_axis_value-&gt;setVisible(false);</span><br><span class="line">        ui-&gt;label_Z_axis_value-&gt;setVisible(false);</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        ui-&gt;label_21-&gt;setVisible(true);</span><br><span class="line">        ui-&gt;label_22-&gt;setVisible(true);</span><br><span class="line">        ui-&gt;label_23-&gt;setVisible(true);</span><br><span class="line">        ui-&gt;label_icon7-&gt;setVisible(true);</span><br><span class="line">        ui-&gt;label_icon8-&gt;setVisible(true);</span><br><span class="line">        ui-&gt;label_icon9-&gt;setVisible(true);</span><br><span class="line">        ui-&gt;label_icon10-&gt;setVisible(true);</span><br><span class="line">        ui-&gt;label_icon11-&gt;setVisible(true);</span><br><span class="line">        ui-&gt;label_icon12-&gt;setVisible(true);</span><br><span class="line">        ui-&gt;label_X_axis_value-&gt;setVisible(true);</span><br><span class="line">        ui-&gt;label_Y_axis_value-&gt;setVisible(true);</span><br><span class="line">        ui-&gt;label_Z_axis_value-&gt;setVisible(true);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Widget::~Widget()</span><br><span class="line">&#123;</span><br><span class="line">    delete ui;</span><br><span class="line">&#125;</span><br><span class="line">//check joystick connect</span><br><span class="line">//==== 调用 Linux 命令gpioget读取 gpiochip3, offset=7 引脚电平  ====//</span><br><span class="line">bool Widget::checkGPIOStatus()</span><br><span class="line">&#123;</span><br><span class="line">    QProcess process;</span><br><span class="line">    process.start(&quot;gpioget&quot;, QStringList() &lt;&lt; &quot;-c&quot; &lt;&lt; &quot;gpiochip3&quot; &lt;&lt; &quot;7&quot;);</span><br><span class="line"></span><br><span class="line">    if (!process.waitForFinished(1000)) &#123;</span><br><span class="line">        qDebug() &lt;&lt; &quot;GPIO read timeout&quot;;</span><br><span class="line">        return false;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    QString output = process.readAllStandardOutput();</span><br><span class="line">//    qDebug() &lt;&lt; &quot;GPIO output:&quot; &lt;&lt; output;</span><br><span class="line"></span><br><span class="line">    return output.contains(&quot;inactive&quot;);</span><br><span class="line">&#125;</span><br><span class="line">//define Status LED method</span><br><span class="line">//==== 利用 Qt StyleSheet 给 QLabel 画圆形指示灯 ====//</span><br><span class="line">void Widget::setstatusLed(QLabel* label, int color, int size)</span><br><span class="line">&#123;</span><br><span class="line">    label-&gt;setText(&quot;&quot;);     //==== 清空文字，只用色块显示 LED  ====//</span><br><span class="line">    //====  min/max 宽高固定 size，border-radius: size/2 → 正方形 + 圆角一半 = 正圆形 ====//</span><br><span class="line">    QString min_width = QString(&quot;min-width: %1px;&quot;).arg(size);</span><br><span class="line">    QString min_height = QString(&quot;min-height: %1px;&quot;).arg(size);</span><br><span class="line">    QString max_width = QString(&quot;max-width: %1px;&quot;).arg(size);</span><br><span class="line">    QString max_height = QString(&quot;max-height: %1px;&quot;).arg(size);</span><br><span class="line"></span><br><span class="line">    QString border_radius = QString(&quot;border-radius: %1px;&quot;).arg(size/2);</span><br><span class="line">    QString border = QString(&quot;border:1px solid black;&quot;);</span><br><span class="line"></span><br><span class="line">    QString background = &quot;background-color:&quot;;</span><br><span class="line">    switch (color) &#123;</span><br><span class="line">    case 0:</span><br><span class="line">        background += &quot;rgb(190,190,190)&quot;;//background :gray</span><br><span class="line">        break;</span><br><span class="line">    case 1:</span><br><span class="line">        background += &quot;rgb(255,0,0)&quot;;//Red status Led</span><br><span class="line">        break;</span><br><span class="line">    case 2:</span><br><span class="line">        background += &quot;rgb(0,255,0)&quot;;//Green status Led</span><br><span class="line">        break;</span><br><span class="line">    case 3:</span><br><span class="line">        background += &quot;rgb(255,255,0)&quot;;//Yellow status Led</span><br><span class="line">        break;</span><br><span class="line">    case 4:</span><br><span class="line">        background += &quot;rgb(135,206,235)&quot;;//blue status Led for release/idle</span><br><span class="line">        break;</span><br><span class="line">    default:</span><br><span class="line">        break;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    const QString SheetStyle = min_width + min_height + max_width + max_height + border_radius + border + background;</span><br><span class="line">    label-&gt;setStyleSheet(SheetStyle);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//define joystick_XYZ_Value method</span><br><span class="line">//====  修改 X/Y/Z 轴 QLabel 上的数字，范围 [-100 ~ +100] ====//</span><br><span class="line">//====  键盘 W/S/E/D/R/F (参考前面GPIO key 定义)按键触发 keyPressEvent 时调用  ====//</span><br><span class="line">void Widget::joystick_XYZ_Value(QLabel* label,int raise)</span><br><span class="line">&#123;</span><br><span class="line">    QString color;</span><br><span class="line">    int newValue;</span><br><span class="line">    bool ok = false;</span><br><span class="line">    int currentValue = label-&gt;text().toInt(&amp;ok);//get current value</span><br><span class="line">    if(raise)</span><br><span class="line">    &#123;</span><br><span class="line">        newValue = currentValue + 1;</span><br><span class="line">        if (newValue &gt; 100)</span><br><span class="line">            newValue = 100;</span><br><span class="line">    &#125;</span><br><span class="line">    else</span><br><span class="line">    &#123;</span><br><span class="line">        newValue = currentValue - 1;</span><br><span class="line">        if (newValue &lt; -100)</span><br><span class="line">            newValue = -100;</span><br><span class="line">    &#125;</span><br><span class="line">    label-&gt;setText(QString::number(newValue));</span><br><span class="line"></span><br><span class="line">    if(newValue == 0)</span><br><span class="line">        color = &quot;black&quot;;</span><br><span class="line">    if (newValue &lt; 0)</span><br><span class="line">        color = &quot;green&quot;;</span><br><span class="line">    if (newValue &gt; 0)</span><br><span class="line">        color = &quot;blue&quot;;</span><br><span class="line"></span><br><span class="line">    label-&gt;setStyleSheet(QString(&quot;color: %1; font-weight: bold;&quot;).arg(color));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//define keypad key event method</span><br><span class="line">//==== F1~F6、ESC、上下左右、回车 → 对应 12 个 LED，按下时 LED 变成绿色  ====//</span><br><span class="line">//====W/S：X 轴 +/-  ====//</span><br><span class="line">//====E/D：Y 轴 +/-  ====//</span><br><span class="line">//====R/F：Z 轴 +/-  ====//</span><br><span class="line">//======================//</span><br><span class="line">void Widget::keyPressEvent(QKeyEvent *event)</span><br><span class="line">&#123;</span><br><span class="line">//    if(event-&gt;key() == Qt::Key_F1)</span><br><span class="line">//        setstatusLed(ui-&gt;label_icon1_status, 2, 30);</span><br><span class="line">    switch (event-&gt;key() ) &#123;</span><br><span class="line">    case Qt::Key_F1:</span><br><span class="line">        setstatusLed(ui-&gt;label_icon1_status, 2, 30);//Green status Led</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_F2:</span><br><span class="line">        setstatusLed(ui-&gt;label_icon2_status, 2, 30);//Green status Led</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_F3:</span><br><span class="line">        setstatusLed(ui-&gt;label_icon3_status, 2, 30);//Green status Led</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_F4:</span><br><span class="line">        setstatusLed(ui-&gt;label_icon4_status, 2, 30);//Green status Led</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_F5:</span><br><span class="line">        setstatusLed(ui-&gt;label_icon5_status, 2, 30);//Green status Led</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_F6:</span><br><span class="line">        setstatusLed(ui-&gt;label_icon6_status, 2, 30);//Green status Led</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_Escape:</span><br><span class="line">        setstatusLed(ui-&gt;label_icon7_status, 2, 30);//Green status Led</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_Up :</span><br><span class="line">        setstatusLed(ui-&gt;label_icon8_status, 2, 30);//Green status Led</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_Return:</span><br><span class="line">        setstatusLed(ui-&gt;label_icon9_status, 2, 30);//Green status Led</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_Left:</span><br><span class="line">        setstatusLed(ui-&gt;label_icon10_status, 2, 30);//Green status Led</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_Down:</span><br><span class="line">        setstatusLed(ui-&gt;label_icon11_status, 2, 30);//Green status Led</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_Right:</span><br><span class="line">        setstatusLed(ui-&gt;label_icon12_status, 2, 30);//Green status Led</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_S://X axis &quot;-&quot;</span><br><span class="line">        joystick_XYZ_Value(ui-&gt;label_X_axis_value, 0);</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_W://X axis &quot;+&quot;</span><br><span class="line">        joystick_XYZ_Value(ui-&gt;label_X_axis_value, 1);</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_D://Y axis &quot;-&quot;</span><br><span class="line">        joystick_XYZ_Value(ui-&gt;label_Y_axis_value, 0);</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_E://Y axis &quot;+&quot;</span><br><span class="line">        joystick_XYZ_Value(ui-&gt;label_Y_axis_value, 1);</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_F://Y axis &quot;-&quot;</span><br><span class="line">        joystick_XYZ_Value(ui-&gt;label_Z_axis_value, 0);</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_R://Y axis &quot;+&quot;</span><br><span class="line">        joystick_XYZ_Value(ui-&gt;label_Z_axis_value, 1);</span><br><span class="line">        break;</span><br><span class="line">    default:</span><br><span class="line">        break;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    //save default event</span><br><span class="line">     QWidget::keyPressEvent(event);</span><br><span class="line">&#125;</span><br><span class="line">//====  按键松开时，对应 LED 切换为浅蓝色（color=4） ====//</span><br><span class="line">void Widget::keyReleaseEvent(QKeyEvent *event)</span><br><span class="line">&#123;</span><br><span class="line">    switch (event-&gt;key() ) &#123;</span><br><span class="line">    case Qt::Key_F1:</span><br><span class="line">        setstatusLed(ui-&gt;label_icon1_status, 4, 30);//blue status Led</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_F2:</span><br><span class="line">        setstatusLed(ui-&gt;label_icon2_status, 4, 30);//blue status Led</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_F3:</span><br><span class="line">        setstatusLed(ui-&gt;label_icon3_status, 4, 30);//blue status Led</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_F4:</span><br><span class="line">        setstatusLed(ui-&gt;label_icon4_status, 4, 30);//blue status Led</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_F5:</span><br><span class="line">        setstatusLed(ui-&gt;label_icon5_status, 4, 30);//blue status Led</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_F6:</span><br><span class="line">        setstatusLed(ui-&gt;label_icon6_status, 4, 30);//blue status Led</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_Escape:</span><br><span class="line">        setstatusLed(ui-&gt;label_icon7_status, 4, 30);//blue status Led</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_Up :</span><br><span class="line">        setstatusLed(ui-&gt;label_icon8_status, 4, 30);//blue status Led</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_Return:</span><br><span class="line">        setstatusLed(ui-&gt;label_icon9_status, 4, 30);//blue status Led</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_Left:</span><br><span class="line">        setstatusLed(ui-&gt;label_icon10_status, 4, 30);//blue status Led</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_Down:</span><br><span class="line">        setstatusLed(ui-&gt;label_icon11_status, 4, 30);//blue status Led</span><br><span class="line">        break;</span><br><span class="line">    case Qt::Key_Right:</span><br><span class="line">        setstatusLed(ui-&gt;label_icon12_status, 4, 30);//blue status Led</span><br><span class="line">        break;</span><br><span class="line">    default:</span><br><span class="line">        break;</span><br><span class="line">    //save default event</span><br><span class="line">    QWidget::keyReleaseEvent(event);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void Widget::on_pushButton_clicked()</span><br><span class="line">&#123;</span><br><span class="line">    QApplication::quit();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+
+
+
+		</div>
+
+		
+		<div class="post-copyright-info w-full my-8 px-2 sm:px-6 md:px-8">
+			<div class="article-copyright-info-container">
+    <ul>
+        <li><strong>Title:</strong> 基于QT 测试工具开发  keypad 篇</li>
+        <li><strong>Author:</strong> Meteor Liu</li>
+        <li><strong>Created at
+                :</strong> 2026-09-22 13:52:32</li>
+        
+            <li>
+                <strong>Updated at
+                    :</strong> 2026-09-22 14:58:35
+            </li>
+        
+        <li>
+            <strong>Link:</strong> https://meteorcool.github.io/2026/09/22/基于QT-测试工具开发-keypad-篇/
+        </li>
+        <li>
+            <strong>
+                License:
+            </strong>
+            
+
+            
+                This work is licensed under <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY-NC-SA 4.0</a>.
+            
+        </li>
+    </ul>
+</div>
+
+		</div>
+		
+
+		
+		<ul class="post-tags-box text-lg mt-1.5 flex-wrap justify-center flex md:hidden">
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/QT/">#QT</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/c/">#c++</a>&nbsp;
+			</li>
+			
+		</ul>
+		
+
+		
+
+		
+		<div class="article-nav my-8 flex justify-between items-center px-2 sm:px-6 md:px-8">
+			
+			
+			<div class="article-next border-border-color shadow-redefine-flat shadow-shadow-color-2 rounded-medium px-4 py-2 hover:shadow-redefine-flat-hover hover:shadow-shadow-color-2">
+				<a class="next" rel="next" href="/2026/09/22/DXE-Phase-6-FV-%E4%B8%8EFVB-FV-%E9%A9%B1%E5%8A%A8/">
+					<span class="title flex justify-center items-center">
+						<span class="post-nav-title-item truncate max-w-48">DXE Phase(6) FV 与FVB  FV 驱动</span>
+						<span class="post-nav-item">Next posts</span>
+					</span>
+					<span class="right arrow-icon flex justify-center items-center">
+						<i class="fa-solid fa-chevron-right"></i>
+					</span>
+				</a>
+			</div>
+			
+		</div>
+		
+
+
+		
+		<div class="comment-container px-2 sm:px-6 md:px-8 pb-8">
+			<div class="comments-container mt-10 w-full ">
+    <div id="comment-anchor" class="w-full h-2.5"></div>
+    <div class="comment-area-title w-full my-1.5 md:my-2.5 text-xl md:text-3xl font-bold">
+        Comments
+    </div>
+    
+
+        
+            
+    <div id="waline"></div>
+    <script type="module" data-swup-reload-script>
+      import { init } from '/js/libs/waline.js';
+
+      (function() {
+        const startPath = location.pathname;
+        const startTime = Date.now();
+        const retryDelay = 200;
+        const retryLimit = 5000;
+
+        const runWaline = () => {
+          if (location.pathname !== startPath) {
+            return;
+          }
+
+          const container = document.getElementById('waline');
+          if (!container) {
+            if (Date.now() - startTime < retryLimit) {
+              setTimeout(runWaline, retryDelay);
+            }
+            return;
+          }
+
+          if (window.redefineWalineInstance?.destroy) {
+            window.redefineWalineInstance.destroy();
+          }
+
+          container.innerHTML = '';
+          window.redefineWalineInstance = init({
+            el: '#waline',
+            serverURL: 'https://example.example.com',
+            path: location.pathname,
+            dark: 'body[class~="dark-mode"]',
+            reaction: false,
+            requiredMeta: ['nick', 'mail'],
+            emoji: [],
+                      lang: 'zh-CN',
+          });
+        };
+
+        runWaline();
+      })();
+    </script>
+
+
+
+        
+    
+</div>
+
+		</div>
+		
+	</div>
+
+	
+	<div class="toc-content-container">
+		<div class="post-toc-wrap">
+	<div class="post-toc">
+		<div class="toc-title">On this page</div>
+		<div class="page-title">基于QT 测试工具开发  keypad 篇</div>
+		
+
+	</div>
+</div>
+	</div>
+	
+</div>
+
+			</div>
+
+			
+		</div>
+
+		<div class="main-content-footer">
+			<footer class="footer mt-5 py-5 h-auto text-base text-third-text-color relative border-t-2 border-t-border-color">
+    <div class="info-container py-3 text-center">
+        
+            <div class="customize-info my-1">BIOS · EC · ARM  /IPC * Notebook | Powered‑by‑Meteor Liu</div>
+        
+        <div class="text-center">
+            &copy;
+            
+              <span>2022</span>
+              -
+            
+            2026&nbsp;&nbsp;<i class="fa-solid fa-heart fa-beat" style="--fa-animation-duration: 0.5s; color: #f54545"></i>&nbsp;&nbsp;<a href="/">Meteor Liu</a>
+            
+                
+                <p class="post-count space-x-0.5">
+                    <span>
+                        20 posts in total
+                    </span>
+                    
+                </p>
+            
+        </div>
+        
+        
+        
+            <div>
+                Blog up for <span class="odometer" id="runtime_days" ></span> days <span class="odometer" id="runtime_hours"></span> hrs <span class="odometer" id="runtime_minutes"></span> Min <span class="odometer" id="runtime_seconds"></span> Sec
+            </div>
+        
+        
+            <script data-swup-reload-script>
+                try {
+                    function odometer_init() {
+                    const elements = document.querySelectorAll('.odometer');
+                    elements.forEach(el => {
+                        new Odometer({
+                            el,
+                            format: '( ddd).dd',
+                            duration: 200
+                        });
+                    });
+                    }
+                    odometer_init();
+                } catch (error) {}
+            </script>
+        
+        
+        
+    </div>  
+</footer>
+		</div>
+	</div>
+
+	
+	<div class="post-tools">
+		<div class="post-tools-container">
+	<ul class="article-tools-list">
+		<!-- TOC aside toggle -->
+		
+		<li class="right-bottom-tools page-aside-toggle">
+			<i class="fa-regular fa-outdent"></i>
+		</li>
+		
+
+		<!-- go comment -->
+		
+		<li class="go-comment">
+			<i class="fa-regular fa-comments"></i>
+		</li>
+		
+	</ul>
+</div>
+	</div>
+	
+
+	<div class="right-side-tools-container">
+		<div class="side-tools-container">
+	<ul class="hidden-tools-list">
+		<li class="right-bottom-tools tool-font-adjust-plus flex justify-center items-center">
+			<i class="fa-regular fa-magnifying-glass-plus"></i>
+		</li>
+
+		<li class="right-bottom-tools tool-font-adjust-minus flex justify-center items-center">
+			<i class="fa-regular fa-magnifying-glass-minus"></i>
+		</li>
+
+		<li class="right-bottom-tools tool-dark-light-toggle flex justify-center items-center">
+			<i class="fa-regular fa-moon"></i>
+		</li>
+
+		<!-- rss -->
+		
+
+		
+
+		<li class="right-bottom-tools tool-scroll-to-bottom flex justify-center items-center">
+			<i class="fa-regular fa-arrow-down"></i>
+		</li>
+	</ul>
+
+	<ul class="visible-tools-list">
+		<li class="right-bottom-tools toggle-tools-list flex justify-center items-center">
+			<i class="fa-regular fa-cog fa-spin"></i>
+		</li>
+		
+		<li class="right-bottom-tools tool-scroll-to-top flex justify-center items-center">
+			<i class="arrow-up fas fa-arrow-up"></i>
+			<span class="percent"></span>
+		</li>
+		
+		
+	</ul>
+</div>
+	</div>
+
+	<div class="image-viewer-container" role="dialog" aria-modal="true" aria-label="Image viewer">
+	<button class="image-viewer-close" type="button" aria-label="Close">
+		<i class="fa-solid fa-xmark"></i>
+	</button>
+	<button class="image-viewer-prev" type="button" aria-label="Prev">
+		<i class="fa-solid fa-chevron-left"></i>
+	</button>
+	<div class="image-viewer-frame">
+		<img src="" alt="">
+	</div>
+	<div class="image-viewer-exif-panel hidden absolute left-1/2 bottom-20 -translate-x-1/2 w-[min(92vw,420px)] max-h-[60vh] overflow-hidden rounded-2xl bg-background-color-transparent-80 p-4 text-left shadow-redefine-flat backdrop-blur-md" role="dialog" aria-label="EXIF" aria-hidden="true">
+		<div class="flex items-center justify-between mb-3">
+			<span class="text-sm font-semibold text-first-text-color">EXIF</span>
+			<button class="image-viewer-exif-close flex h-8 w-8 items-center justify-center rounded-full bg-background-color-transparent-80 text-first-text-color transition hover:bg-background-color-transparent-40" type="button" aria-label="Close">
+				<i class="fa-solid fa-xmark text-[0.65rem]"></i>
+			</button>
+		</div>
+		<div class="image-viewer-exif-cards grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto pr-1 scrollbar-hide"></div>
+		<template class="image-viewer-exif-card-template">
+			<div class="rounded-lg bg-background-color-transparent-40 px-3 py-2">
+				<div class="image-viewer-exif-card-header flex items-center gap-2 mb-1">
+					<i class="image-viewer-exif-card-icon fa-solid fa-circle-info text-xs text-third-text-color"></i>
+					<div class="image-viewer-exif-card-title text-xs font-semibold text-first-text-color"></div>
+				</div>
+				<div class="image-viewer-exif-card-items flex flex-col gap-1"></div>
+			</div>
+		</template>
+	</div>
+	<button class="image-viewer-exif-toggle flex items-center gap-2 hidden absolute left-1/2 bottom-6 -translate-x-1/2 rounded-full border border-border-color bg-background-color-transparent-80 px-4 py-2 text-first-text-color backdrop-blur-md transition hover:bg-background-color-transparent-40" type="button" aria-label="EXIF" aria-expanded="false">
+		<i class="fa-solid fa-circle-info text-xs"></i>
+		<span class="text-xs font-semibold uppercase tracking-wider">EXIF</span>
+	</button>
+	<button class="image-viewer-next" type="button" aria-label="Next">
+		<i class="fa-solid fa-chevron-right"></i>
+	</button>
+</div>
+
+
+	
+
+</main>
+
+
+
+<script src="/js/build/libs/Swup.min.js"></script>
+
+<script src="/js/build/libs/SwupSlideTheme.min.js"></script>
+
+<script src="/js/build/libs/SwupScriptsPlugin.min.js"></script>
+
+<script src="/js/build/libs/SwupProgressPlugin.min.js"></script>
+
+<script src="/js/build/libs/SwupScrollPlugin.min.js"></script>
+
+<script src="/js/build/libs/SwupPreloadPlugin.min.js"></script>
+
+<script>
+    window.swup = new Swup({
+        plugins: [
+            new SwupScriptsPlugin({
+                optin: true,
+            }),
+            new SwupProgressPlugin(),
+            new SwupScrollPlugin({
+                offset: 80,
+            }),
+            new SwupSlideTheme({
+                mainElement: ".main-content-body",
+            }),
+            new SwupPreloadPlugin(),
+        ],
+        containers: ["#swup"],
+    });
+
+    window.dispatchEvent(
+        new CustomEvent("redefine:swup:ready", {
+            detail: {
+                swup: window.swup,
+            },
+        }),
+    );
+</script>
+
+
+
+
+	
+<script src="/js/build/main.js" type="module"></script>
+
+
+
+    
+<script src="/js/build/libs/odometer.min.js"></script>
+
+    
+<link rel="stylesheet" href="/assets/odometer-theme-minimal.css">
+
+
+
+
+
+
+
+  
+<script src="/js/build/libs/Typed.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+<script src="/js/build/libs/moment-with-locales.min.js" data-swup-reload-script=""></script>
+
+
+
+	
+</body>
+
+</html>
