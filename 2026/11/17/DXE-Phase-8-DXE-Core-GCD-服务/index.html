@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="keywords" content="BIOS,ARM,IPC,Notebook,Driver">
+    
+    
+    <meta name="author" content="Meteor Liu">
+    
+    <!-- Completely eliminate flash of wrong theme -->
+    <script>
+        (function() {
+            const THEME_KEY = "REDEFINE-THEME-STATUS";
+            const DARK = "dark", LIGHT = "light";
+            
+            // Get preferred theme
+            function getTheme() {
+                try {
+                    const saved = localStorage.getItem(THEME_KEY);
+                    if (saved) {
+                        const { isDark } = JSON.parse(saved);
+                        return isDark ? DARK : LIGHT;
+                    }
+                } catch (e) {}
+                
+                return matchMedia("(prefers-color-scheme: dark)").matches ? DARK : LIGHT;
+            }
+            
+            // Apply theme to document
+            function applyTheme(theme) {
+                const isDark = theme === DARK;
+                const root = document.documentElement;
+                
+                // Set classes for compatibility
+                root.classList.add(theme);
+                root.classList.remove(isDark ? LIGHT : DARK);
+                root.style.colorScheme = theme;
+            }
+            
+            // Initial application
+            const theme = getTheme();
+            applyTheme(theme);
+            
+            // Listen for system preference changes
+            matchMedia("(prefers-color-scheme: dark)").addEventListener("change", ({ matches }) => {
+                // Only update if using system preference (no localStorage entry)
+                if (!localStorage.getItem(THEME_KEY)) {
+                    applyTheme(matches ? DARK : LIGHT);
+                }
+            });
+            
+            // Set body classes ASAP (before DOMContentLoaded)
+            (function() {
+                const addBodyClass = () => {
+                    const b = document.body;
+                    if (!b) return false;
+                    b.classList.add(theme + "-mode");
+                    return true;
+                };
+
+                // Try immediately
+                if (addBodyClass()) return;
+
+                // Observe until body exists
+                const mo = new MutationObserver(() => {
+                    if (addBodyClass()) mo.disconnect();
+                });
+                mo.observe(document.documentElement, { childList: true, subtree: true });
+            })();
+        })();
+    </script>
+    
+    <!-- preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    
+    <!--- Seo Part-->
+    
+    <link rel="canonical" href="https://meteorcool.github.io/2026/11/17/dxe-phase-8-dxe-core-gcd-服务/"/>
+    <meta name="robots" content="index,follow">
+    <meta name="googlebot" content="index,follow">
+    <meta name="revisit-after" content="1 days">
+    
+    
+        
+        <meta name="description" content="Hexo Theme Redefine, Redefine Your Hexo Journey.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DXE Phase 8 DXE Core GCD 服务(1)">
+<meta property="og:url" content="https://meteorcool.github.io/2026/11/17/DXE-Phase-8-DXE-Core-GCD-%E6%9C%8D%E5%8A%A1/index.html">
+<meta property="og:site_name" content="Development Notes of Meteor">
+<meta property="og:description" content="Hexo Theme Redefine, Redefine Your Hexo Journey.">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://meteorcool.github.io/images/redefine-og.webp">
+<meta property="article:published_time" content="2026-11-17T02:46:54.000Z">
+<meta property="article:modified_time" content="2026-11-17T07:49:34.793Z">
+<meta property="article:author" content="Meteor Liu">
+<meta property="article:tag" content="Code">
+<meta property="article:tag" content="DXE">
+<meta property="article:tag" content="Memory">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://meteorcool.github.io/images/redefine-og.webp">
+    
+    
+    <!--- Icon Part-->
+    <link rel="icon" type="image/png" href="/images/1710300-795548.svg" sizes="192x192">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/1710300-795548.svg">
+    <meta name="theme-color" content="#009688">
+    <link rel="shortcut icon" href="/images/1710300-795548.svg">
+    <!--- Page Info-->
+    
+    <title>
+        
+            DXE Phase 8 DXE Core GCD 服务(1) | Development Notes of Meteor
+        
+    </title>
+
+    
+<link rel="stylesheet" href="/fonts/Chillax/chillax.css">
+
+
+    <!--- Inject Part-->
+    
+
+    
+<link rel="stylesheet" href="/css/style.css">
+
+
+    
+        
+<link rel="stylesheet" href="/css/build/tailwind.css">
+
+    
+
+    
+<link rel="stylesheet" href="/fonts/GeistMono/geist-mono.css">
+
+    
+<link rel="stylesheet" href="/fonts/Geist/geist.css">
+
+    <!--- Font Part-->
+    
+    
+    
+    
+    
+    
+
+    <script id="hexo-configurations">
+    window.config = {"hostname":"meteorcool.github.io","root":"/","language":"en"};
+    window.theme = {"articles":{"style":{"font_size":"16px","line_height":1.5,"image_border_radius":"14px","image_alignment":"center","image_caption":false,"link_icon":true,"delete_mask":false,"title_alignment":"left","headings_top_spacing":{"h1":"3.2rem","h2":"2.4rem","h3":"1.9rem","h4":"1.6rem","h5":"1.4rem","h6":"1.3rem"}},"word_count":{"enable":true,"count":true,"min2read":true},"author_label":{"enable":true,"auto":false,"list":[]},"code_block":{"copy":true,"style":"mac","highlight_theme":{"light":"github","dark":"vs2015"},"font":{"enable":false,"family":null,"url":null}},"toc":{"enable":true,"max_depth":3,"number":false,"expand":true,"init_open":true},"copyright":{"enable":true,"default":"cc_by_nc_sa"},"lazyload":true,"pangu_js":false,"recommendation":{"enable":false,"title":"推荐阅读","limit":3,"mobile_limit":2,"placeholder":"/images/wallhaven-wqery6-light.webp","skip_dirs":[]}},"colors":{"primary":"#009688","secondary":null,"default_mode":"light"},"global":{"fonts":{"chinese":{"enable":false,"family":null,"url":null},"english":{"enable":false,"family":null,"url":null},"title":{"enable":false,"family":null,"url":null}},"content_max_width":"1000px","sidebar_width":"210px","hover":{"shadow":true,"scale":false},"scroll_progress":{"bar":false,"percentage":true},"website_counter":{"url":"https://cn.vercount.one/js","enable":false,"site_pv":true,"site_uv":true,"post_pv":true},"single_page":true,"preloader":{"enable":false,"custom_message":null},"side_tools":{"gear_rotation":true,"auto_expand":false},"open_graph":{"enable":true,"image":"/images/redefine-og.webp","description":"Hexo Theme Redefine, Redefine Your Hexo Journey."},"google_analytics":{"enable":false,"id":null}},"home_banner":{"enable":true,"style":"fixed","image":{"light":"/images/saihu.jpg","dark":"/images/showmountain.jpg"},"title":"Development Notes of Meteor","subtitle":{"text":["记录与分享","BIOS 技术记录","ARM 开发笔记"],"hitokoto":{"enable":false,"show_author":false,"api":"https://v1.hitokoto.cn"},"typing_speed":100,"backing_speed":80,"starting_delay":500,"backing_delay":1500,"loop":true,"smart_backspace":true},"text_color":{"light":"#fff","dark":"#d1d1b6"},"text_style":{"title_size":"2.8rem","subtitle_size":"1.5rem","line_height":1.2},"custom_font":{"enable":false,"family":null,"url":null},"social_links":{"enable":false,"style":"default","links":[{"icon":"fa-brands fa-github","url":null},{"icon":"fa-brands fa-twitter","url":null},{"icon":"fa-solid fa-at","url":"meteor.liu@petalmail.com"},{"icon":"fa-brands fa-telegram","url":null},{"icon":"/images/custom-icon.svg","url":null}],"qrs":[{"icon":"fa-brands fa-weixin","qr":null},{"icon":"/images/custom-icon.svg","qr":null}]}},"plugins":{"feed":{"enable":false},"aplayer":{"enable":false,"type":"fixed","audios":[{"name":null,"artist":null,"url":null,"cover":null,"lrc":null}]},"mermaid":{"enable":false,"version":"11.4.1","theme":{"light":"default","dark":"dark"}}},"version":"2.9.0","navbar":{"auto_hide":false,"color":{"left":"#f78736","right":"#367df7","transparency":35},"width":{"home":"1200px","pages":"1000px"},"links":{"Home":{"path":"/","icon":"fa-regular fa-house"}},"search":{"enable":false,"preload":true}},"page_templates":{"friends_column":2,"tags_style":"blur","masonry":{"batch_size":12,"initial_batch_size":24}},"home":{"sidebar":{"enable":true,"position":"left","first_item":"menu","announcement":null,"show_on_mobile":true,"links":{"Archives":{"path":"/archives","icon":"fa-regular fa-box-archive","class":"menu-archive"},"EC":{"path":"/categories/EC/","icon":"fa-solid fa-server","class":"menu-ec"},"ARM":{"path":"/categories/ARM/","icon":"fa-solid fa-microchip","class":"menu-arm"},"BIOS":{"path":"/categories/BIOS/","icon":"fa-solid fa-memory","class":"menu-bios"},"Other":{"path":"/categories/Other/","icon":"fa-solid fa-file-lines","class":"menu-other"}}},"article_date_format":"auto","excerpt_length":200,"categories":{"enable":true,"limit":3},"tags":{"enable":true,"limit":3}},"footer":{"runtime":true,"icon":"<i class=\"fa-solid fa-heart fa-beat\" style=\"--fa-animation-duration: 0.5s; color: #f54545\"></i>","start":"2022/8/17 11:45:14","statistics":true,"customize":"BIOS · EC · ARM  /IPC * Notebook | Powered‑by‑Meteor Liu","icp":{"enable":false,"number":null,"url":null}},"footerStart":"2022/8/17 11:45:14","mermaid":{"style":{"light":"default","dark":"dark"}}};
+    window.lang_ago = {"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days ago","week":"%s weeks ago","month":"%s months ago","year":"%s years ago"};
+    window.i18n = {"search":"Search...","toc":"On this page","prev":"Prev","next":"Next","prev_posts":"Prev posts","next_posts":"Next posts","page":"Page %d","recent_posts":"Recent Posts","share":"Share","powered_by":"POWERED BY %s","theme":"THEME","rss_feed":"RSS Feed","category":"Category","categories":"Categories","tag":"Tag","tags":"Tags","post":"Post","posts":"Posts","tagcloud":"Tag Cloud","comment":"Comment","comments":"Comments","home":"Home","archive":"Archive","archives":"Archives","top":"TOP","sticky":"Sticky","go-back-home":"Go Back Home","masonry_loading":"Loading photos...","image_viewer":"Image viewer","close":"Close","exif":{"title":"EXIF","cards":{"camera":"Camera","lens":"Lens","exposure":"Exposure","other":"Other"},"fields":{"make":"Brand","model":"Model","date_taken":"Date taken","lens_model":"Lens","focal_length":"Focal length","focus_mode":"Focus mode","shutter":"Shutter","aperture":"Aperture","iso":"ISO","exposure_program":"Exposure program","exposure_compensation":"Exposure compensation","metering_mode":"Metering mode","flash":"Flash","white_balance":"White balance","latitude":"Latitude","longitude":"Longitude","altitude":"Altitude"},"status":{"loading":"Loading...","no_exif":"No EXIF available","library_missing":"EXIF library not loaded","image_source_missing":"Image source unavailable","unavailable":"EXIF unavailable (blocked by CORS or missing metadata)","flag_unavailable":"EXIF unavailable"}},"about":"About","changelog":"Changelog","links":"Links","link":"Link","friends":"Friends","friend":"Friend","timeline":"Timeline","shuoshuo":"Shuoshuo","bookmarks":"Bookmarks","site_uv":"VISITOR COUNT","site_pv":"TOTAL PAGE VIEWS","read_more":"Read more","wordcount":"Words","min2read":"Mins","status":"Status","runtime":"Blog up for","days":"days","hours":"hrs","minutes":"Min","seconds":"Sec","optimized_by":"and Optimized by Evan","rights":"All Rights Reserved","site_posts":"%s posts in total","site_wordcount":"%s words in total","copyright":{"author":"Author","title":"Title","link":"Link","create_time":"Created at","update_time":"Updated at","license_title":"License","license_content":"This work is licensed under %s.","all_rights_reserved":"All Rights Reserved &#169; %s","public_domain":"This work is in the public domain."},"ago":{"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days ago","week":"%s weeks ago","month":"%s months ago","year":"%s years ago"},"create_time":"Created","update_time":"Updated","expired":"This post is written %s days ago, and the content may not be up to date."};
+    window.data = {"masonry":false};
+  </script>
+    
+    <!--- Fontawesome Part-->
+    
+<link rel="stylesheet" href="/fontawesome/fontawesome.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/brands.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/solid.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/regular.min.css">
+
+    
+    
+    
+    
+</head>
+
+
+<body>
+	<div class="progress-bar-container">
+	
+
+	
+	<span class="pjax-progress-bar"></span>
+	<!--        <span class="swup-progress-icon">-->
+	<!--            <i class="fa-solid fa-circle-notch fa-spin"></i>-->
+	<!--        </span>-->
+	
+</div>
+
+<main class="page-container" id="swup">
+
+	
+
+	<div class="main-content-container flex flex-col justify-between min-h-dvh">
+		<div class="main-content-header">
+			<header class="navbar-container px-6 md:px-12">
+    <div class="navbar-content transition-navbar ">
+        <div class="left">
+            
+            <a class="logo-title" href="/">
+                
+                Development Notes of Meteor
+                
+            </a>
+        </div>
+
+        <div class="right">
+            <!-- PC -->
+            <div class="desktop">
+                <ul class="navbar-list">
+                    
+                        
+                            
+
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class=""
+                                   href="/"
+                                        >
+                                    <i class="fa-regular fa-house fa-fw"></i>
+                                    HOME
+                                    
+                                </a>
+
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                    
+                </ul>
+            </div>
+            <!-- Mobile -->
+            <div class="mobile">
+                
+                <div class="icon-item navbar-bar">
+                    <div class="navbar-bar-middle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile sheet -->
+    <div class="navbar-drawer h-dvh w-full absolute top-0 left-0 bg-background-color flex flex-col justify-between">
+        <ul class="drawer-navbar-list flex flex-col px-4 justify-center items-start">
+            
+                
+                    
+
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full "
+                           href="/"
+                        >
+                            <span>
+                                HOME
+                            </span>
+                            
+                                <i class="fa-regular fa-house fa-sm fa-fw"></i>
+                            
+                        </a>
+                        
+
+                        
+                    </li>
+            
+
+            
+            
+                
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/archives"
+                        >
+                            <span>Archives</span>
+                            <i class="fa-regular fa-box-archive fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/categories/EC/"
+                        >
+                            <span>EC</span>
+                            <i class="fa-solid fa-server fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/categories/ARM/"
+                        >
+                            <span>ARM</span>
+                            <i class="fa-solid fa-microchip fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/categories/BIOS/"
+                        >
+                            <span>BIOS</span>
+                            <i class="fa-solid fa-memory fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/categories/Other/"
+                        >
+                            <span>Other</span>
+                            <i class="fa-solid fa-file-lines fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+            
+        </ul>
+
+        <div class="statistics flex justify-around my-2.5">
+    <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/tags">
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">14</div>
+        <div class="label text-third-text-color text-sm">Tags</div>
+    </a>
+    <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/categories">
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">9</div>
+        <div class="label text-third-text-color text-sm">Categories</div>
+    </a>
+    <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/archives">
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">22</div>
+        <div class="label text-third-text-color text-sm">Posts</div>
+    </a>
+</div>
+    </div>
+
+    <div class="window-mask"></div>
+
+</header>
+
+
+		</div>
+
+		<div class="main-content-body transition-fade-up">
+			
+
+			<div class="main-content">
+				<div class="post-page-container flex relative justify-between box-border w-full h-full">
+	<div class="article-content-container">
+
+		<div class="article-title relative w-full">
+			
+			<div class="w-full flex items-center pt-6 justify-start">
+				<h1 class="article-title-regular text-second-text-color tracking-tight text-4xl md:text-6xl font-semibold px-2 sm:px-6 md:px-8 py-3">DXE Phase 8 DXE Core GCD 服务(1)</h1>
+			</div>
+			
+		</div>
+
+		
+		<div class="article-header flex flex-row gap-2 items-center px-2 sm:px-6 md:px-8">
+			<div class="avatar w-[46px] h-[46px] shrink-0 rounded-medium border border-border-color p-px">
+				<img src="/images/avatar.jpg">
+			</div>
+			<div class="info flex flex-col justify-between">
+				<div class="author flex items-center">
+					<span class="name text-default-text-color text-lg font-semibold">Meteor Liu</span>
+					
+					<span class="author-label ml-1.5 text-xs px-2 py-0.5 rounded-small text-third-text-color border border-shadow-color-1">Lv3</span>
+					
+				</div>
+				<div class="meta-info">
+					<div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fa-regular fa-pen-fancy"></i>&nbsp;
+        <span class="desktop">2026-11-17 10:46:54</span>
+        <span class="mobile">2026-11-17 10:46:54</span>
+        <span class="hover-info">Created</span>
+    </span>
+    
+        <span class="article-date article-meta-item">
+            <i class="fa-regular fa-wrench"></i>&nbsp;
+            <span class="desktop">2026-11-17 15:49:34</span>
+            <span class="mobile">2026-11-17 15:49:34</span>
+            <span class="hover-info">Updated</span>
+        </span>
+    
+
+    
+        <span class="article-categories article-meta-item">
+            <i class="fa-regular fa-folders"></i>&nbsp;
+            <ul>
+                
+                
+                    
+                        
+                        <li>
+                            <a href="/categories/BIOS/">BIOS</a>&nbsp;
+                        </li>
+                    
+                    
+                
+                    
+                        
+                            <li>></li>
+                        
+                        <li>
+                            <a href="/categories/BIOS/BIOS-Code/">BIOS Code</a>&nbsp;
+                        </li>
+                    
+                    
+                
+                    
+                        
+                            <li>></li>
+                        
+                        <li>
+                            <a href="/categories/BIOS/BIOS-Code/DXE/">DXE</a>&nbsp;
+                        </li>
+                    
+                    
+                
+            </ul>
+        </span>
+    
+    
+        <span class="article-tags article-meta-item">
+            <i class="fa-regular fa-tags"></i>&nbsp;
+            <ul>
+                
+                    <li>
+                        <a href="/tags/DXE/">DXE</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/Code/">Code</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/Memory/">Memory</a>&nbsp;
+                    </li>
+                
+            </ul>
+        </span>
+    
+
+    
+    
+    
+    
+</div>
+
+				</div>
+			</div>
+		</div>
+		
+
+		
+
+
+		<div class="article-content markdown-body px-2 sm:px-6 md:px-8 pb-8">
+			<p>​		GCD 是 <strong>DXE Core 提供的一组 DXE Services（gDS）</strong>，不是独立驱动，由 PEI 产出的 HOB 资源描述表初始化，维护<strong>启动处理器可见的物理地址空间</strong>，分为两张表：<strong>GCD Memory Space Map &#x2F; GCD I&#x2F;O Space Map</strong>UEFI Forum。</p>
+<h4 id="核心作用"><a href="#核心作用" class="headerlink" title="核心作用"></a>核心作用</h4><ol>
+<li><strong>统一管理平台地址资源</strong>：跟踪物理内存、MMIO、IO Port 区域，标记区域类型（系统内存 &#x2F; MMIO &#x2F; 预留）、Cache 属性（WB&#x2F;WC&#x2F;UC 等）、占用状态；驱动增删 MMIO、预留资源都走 GCD 接口（Add&#x2F;Allocate&#x2F;Free&#x2F;SetAttribute）UEFI Forum。</li>
+<li><strong>CPU 缓存属性的中枢</strong>：<code>SetMemorySpaceAttributes</code> 会调用 <code>EFI_CPU_ARCH_PROTOCOL</code> 配置页表 &#x2F; MTRR，保证内存访问一致性；GCD 是固件视角地址属性的权威记录，和 CPU 硬件属性同步UEFI Forum。</li>
+<li><strong>资源仲裁与防冲突</strong>：所有 DXE 驱动申请物理资源必须经过 GCD，避免多驱动争抢同一地址范围；是 PCI 枚举、芯片集驱动、SOC MMIO 分配的基础依赖。</li>
+<li><strong>供查询导出</strong>：<code>GetMemorySpaceMap / GetIoSpaceMap</code> 可导出整张资源表，调试、ACPI、OS 启动阶段会参考 GCD 信息UEFI Forum</li>
+</ol>
+<h3 id="GCD-管理系统的初始化"><a href="#GCD-管理系统的初始化" class="headerlink" title="GCD 管理系统的初始化"></a>GCD 管理系统的初始化</h3><p>​		DxeCore 解析 PEI 传递的资源 HOB，调用 GCD 接口建立物理地址资源表，再由 CPU 架构驱动同步MTRR 缓存属性，完成 GCD 初始化。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br><span class="line">278</span><br><span class="line">279</span><br><span class="line">280</span><br><span class="line">281</span><br><span class="line">282</span><br><span class="line">283</span><br><span class="line">284</span><br><span class="line">285</span><br><span class="line">286</span><br><span class="line">287</span><br><span class="line">288</span><br><span class="line">289</span><br><span class="line">290</span><br><span class="line">291</span><br><span class="line">292</span><br><span class="line">293</span><br><span class="line">294</span><br><span class="line">295</span><br><span class="line">296</span><br><span class="line">297</span><br><span class="line">298</span><br><span class="line">299</span><br><span class="line">300</span><br><span class="line">301</span><br><span class="line">302</span><br><span class="line">303</span><br><span class="line">304</span><br><span class="line">305</span><br><span class="line">306</span><br><span class="line">307</span><br><span class="line">308</span><br><span class="line">309</span><br><span class="line">310</span><br><span class="line">311</span><br><span class="line">312</span><br><span class="line">313</span><br><span class="line">314</span><br><span class="line">315</span><br><span class="line">316</span><br><span class="line">317</span><br><span class="line">318</span><br></pre></td><td class="code"><pre><span class="line">EFI_STATUS</span><br><span class="line">CoreInitializeMemoryServices (</span><br><span class="line">  IN  VOID                  **HobStart,</span><br><span class="line">  OUT EFI_PHYSICAL_ADDRESS  *MemoryBaseAddress,</span><br><span class="line">  OUT UINT64                *MemoryLength</span><br><span class="line">  )</span><br><span class="line">&#123;</span><br><span class="line">  EFI_PEI_HOB_POINTERS         Hob;</span><br><span class="line">  BOOLEAN                      Found;</span><br><span class="line">  EFI_HOB_HANDOFF_INFO_TABLE   *PhitHob;</span><br><span class="line">  EFI_HOB_RESOURCE_DESCRIPTOR  *ResourceHob;</span><br><span class="line">  EFI_HOB_RESOURCE_DESCRIPTOR  *PhitResourceHob;</span><br><span class="line">  EFI_HOB_RESOURCE_DESCRIPTOR  *MemoryTypeInformationResourceHob;</span><br><span class="line">  EFI_PHYSICAL_ADDRESS         BaseAddress;</span><br><span class="line">  UINT64                       Length;</span><br><span class="line">  UINT64                       Attributes;</span><br><span class="line">  UINT64                       Capabilities;</span><br><span class="line">  EFI_PHYSICAL_ADDRESS         TestedMemoryBaseAddress;</span><br><span class="line">  UINT64                       TestedMemoryLength;</span><br><span class="line">  EFI_PHYSICAL_ADDRESS         HighAddress;</span><br><span class="line">  UINT32                       ReservedCodePageNumber;</span><br><span class="line">  UINT64                       MinimalMemorySizeNeeded;</span><br><span class="line">  EFI_PHYSICAL_ADDRESS         ResourceHobMemoryTop;</span><br><span class="line">  EFI_STATUS                   Status;</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Point at the first HOB.  This must be the PHIT HOB.</span><br><span class="line">  //</span><br><span class="line">  Hob.Raw = *HobStart;</span><br><span class="line">  ASSERT (GET_HOB_TYPE (Hob) == EFI_HOB_TYPE_HANDOFF);</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Initialize the spin locks and maps in the memory services.</span><br><span class="line">  // Also fill in the memory services into the EFI Boot Services Table</span><br><span class="line">  //</span><br><span class="line">  CoreInitializePool ();</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Initialize Local Variables</span><br><span class="line">  //</span><br><span class="line">  PhitResourceHob = NULL;</span><br><span class="line">  ResourceHob     = NULL;</span><br><span class="line">  BaseAddress     = 0;</span><br><span class="line">  Length          = 0;</span><br><span class="line">  Attributes      = 0;</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Cache the PHIT HOB for later use</span><br><span class="line">  //</span><br><span class="line">  PhitHob = Hob.HandoffInformationTable;</span><br><span class="line"></span><br><span class="line">  if (PcdGet64 (PcdLoadModuleAtFixAddressEnable) != 0) &#123;</span><br><span class="line">    ReservedCodePageNumber  = PcdGet32 (PcdLoadFixAddressRuntimeCodePageNumber);</span><br><span class="line">    ReservedCodePageNumber += PcdGet32 (PcdLoadFixAddressBootTimeCodePageNumber);</span><br><span class="line"></span><br><span class="line">    //</span><br><span class="line">    // cache the Top address for loading modules at Fixed Address</span><br><span class="line">    //</span><br><span class="line">    gLoadModuleAtFixAddressConfigurationTable.DxeCodeTopAddress = PhitHob-&gt;EfiMemoryTop</span><br><span class="line">                                                                  + EFI_PAGES_TO_SIZE (ReservedCodePageNumber);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // See if a Memory Type Information HOB is available</span><br><span class="line">  //</span><br><span class="line">  MemoryTypeInformationResourceHob = NULL;</span><br><span class="line">  Status                           = PopulateMemoryTypeInformation (gMemoryTypeInformation);</span><br><span class="line">  if (EFI_ERROR (Status)) &#123;</span><br><span class="line">    DEBUG ((DEBUG_WARN, &quot;No Memory Type Information HOB found, S4 resume will likely fail\n&quot;));</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  MemoryTypeInformationResourceHob = GetMemoryTypeInformationResourceHob (</span><br><span class="line">                                       HobStart,</span><br><span class="line">                                       gMemoryTypeInformation</span><br><span class="line">                                       );</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Include the total memory bin size needed to make sure memory bin could be allocated successfully.</span><br><span class="line">  //</span><br><span class="line">  MinimalMemorySizeNeeded = MINIMUM_INITIAL_MEMORY_SIZE + CalculateTotalMemoryBinSizeNeeded (NULL, gMemoryTypeInformation);</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Find the Resource Descriptor HOB that contains PHIT range EfiFreeMemoryBottom..EfiFreeMemoryTop</span><br><span class="line">  //</span><br><span class="line">  Found = FALSE;</span><br><span class="line">  for (Hob.Raw = *HobStart; !END_OF_HOB_LIST (Hob); Hob.Raw = GET_NEXT_HOB (Hob)) &#123;</span><br><span class="line">    //</span><br><span class="line">    // Skip all HOBs except Resource Descriptor HOBs</span><br><span class="line">    //</span><br><span class="line">    if (GET_HOB_TYPE (Hob) != EFI_HOB_TYPE_RESOURCE_DESCRIPTOR) &#123;</span><br><span class="line">      continue;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    //</span><br><span class="line">    // Skip Resource Descriptor HOBs that do not describe tested system memory</span><br><span class="line">    //</span><br><span class="line">    ResourceHob = Hob.ResourceDescriptor;</span><br><span class="line">    if (ResourceHob-&gt;ResourceType != EFI_RESOURCE_SYSTEM_MEMORY) &#123;</span><br><span class="line">      continue;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    if ((ResourceHob-&gt;ResourceAttribute &amp; MEMORY_ATTRIBUTE_MASK) != TESTED_MEMORY_ATTRIBUTES) &#123;</span><br><span class="line">      continue;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    //</span><br><span class="line">    // Skip Resource Descriptor HOBs that do not contain the PHIT range EfiFreeMemoryBottom..EfiFreeMemoryTop</span><br><span class="line">    //</span><br><span class="line">    if (PhitHob-&gt;EfiFreeMemoryBottom &lt; ResourceHob-&gt;PhysicalStart) &#123;</span><br><span class="line">      continue;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    //</span><br><span class="line">    // Check for potential overflow before addition</span><br><span class="line">    //</span><br><span class="line">    if (ResourceHob-&gt;PhysicalStart &gt; MAX_UINT64 - ResourceHob-&gt;ResourceLength) &#123;</span><br><span class="line">      ASSERT (FALSE);</span><br><span class="line">      ResourceHobMemoryTop = MAX_UINT64;</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">      ResourceHobMemoryTop = ResourceHob-&gt;PhysicalStart + ResourceHob-&gt;ResourceLength;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    if (PhitHob-&gt;EfiFreeMemoryTop &gt; ResourceHobMemoryTop) &#123;</span><br><span class="line">      continue;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    //</span><br><span class="line">    // Cache the resource descriptor HOB for the memory region described by the PHIT HOB</span><br><span class="line">    //</span><br><span class="line">    PhitResourceHob = ResourceHob;</span><br><span class="line">    Found           = TRUE;</span><br><span class="line"></span><br><span class="line">    //</span><br><span class="line">    // If a Memory Type Information Resource HOB was found and is the same</span><br><span class="line">    // Resource HOB that describes the PHIT HOB, then ignore the Memory Type</span><br><span class="line">    // Information Resource HOB.</span><br><span class="line">    //</span><br><span class="line">    if (MemoryTypeInformationResourceHob == PhitResourceHob) &#123;</span><br><span class="line">      MemoryTypeInformationResourceHob = NULL;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    //</span><br><span class="line">    // Compute range between PHIT EfiMemoryTop and the end of the Resource Descriptor HOB</span><br><span class="line">    //</span><br><span class="line">    Attributes  = PhitResourceHob-&gt;ResourceAttribute;</span><br><span class="line">    BaseAddress = PageAlignAddress (PhitHob-&gt;EfiMemoryTop);</span><br><span class="line"></span><br><span class="line">    if (BaseAddress &gt; ResourceHobMemoryTop) &#123;</span><br><span class="line">      Length = 0;</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">      Length = PageAlignLength (ResourceHobMemoryTop - BaseAddress);</span><br><span class="line">      FindLargestFreeRegion (&amp;BaseAddress, &amp;Length, (EFI_HOB_MEMORY_ALLOCATION *)GetFirstHob (EFI_HOB_TYPE_MEMORY_ALLOCATION));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    if (Length &lt; MinimalMemorySizeNeeded) &#123;</span><br><span class="line">      //</span><br><span class="line">      // If that range is not large enough to intialize the DXE Core, then</span><br><span class="line">      // Compute range between PHIT EfiFreeMemoryBottom and PHIT EfiFreeMemoryTop</span><br><span class="line">      //</span><br><span class="line">      BaseAddress = PageAlignAddress (PhitHob-&gt;EfiFreeMemoryBottom);</span><br><span class="line">      Length      = PageAlignLength (PhitHob-&gt;EfiFreeMemoryTop - BaseAddress);</span><br><span class="line">      // This region is required to have no memory allocation inside it, skip check for entries in HOB List</span><br><span class="line">      if (Length &lt; MinimalMemorySizeNeeded) &#123;</span><br><span class="line">        //</span><br><span class="line">        // If that range is not large enough to intialize the DXE Core, then</span><br><span class="line">        // Compute range between the start of the Resource Descriptor HOB and the start of the HOB List</span><br><span class="line">        //</span><br><span class="line">        BaseAddress = PageAlignAddress (ResourceHob-&gt;PhysicalStart);</span><br><span class="line">        Length      = PageAlignLength ((UINT64)((UINTN)*HobStart - BaseAddress));</span><br><span class="line">        FindLargestFreeRegion (&amp;BaseAddress, &amp;Length, (EFI_HOB_MEMORY_ALLOCATION *)GetFirstHob (EFI_HOB_TYPE_MEMORY_ALLOCATION));</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    break;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Assert if a resource descriptor HOB for the memory region described by the PHIT was not found</span><br><span class="line">  //</span><br><span class="line">  ASSERT (Found);</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Take the range in the resource descriptor HOB for the memory region described</span><br><span class="line">  // by the PHIT as higher priority if it is big enough. It can make the memory bin</span><br><span class="line">  // allocated to be at the same memory region with PHIT that has more better compatibility</span><br><span class="line">  // to avoid memory fragmentation for some code practices assume and allocate &lt;4G ACPI memory.</span><br><span class="line">  //</span><br><span class="line">  if (Length &lt; MinimalMemorySizeNeeded) &#123;</span><br><span class="line">    //</span><br><span class="line">    // Search all the resource descriptor HOBs from the highest possible addresses down for a memory</span><br><span class="line">    // region that is big enough to initialize the DXE core.  Always skip the PHIT Resource HOB</span><br><span class="line">    // and the Memory Type Information Resource HOB. The max address must be within the physically</span><br><span class="line">    // addressable range for the processor.</span><br><span class="line">    //</span><br><span class="line">    HighAddress = MAX_ALLOC_ADDRESS;</span><br><span class="line">    for (Hob.Raw = *HobStart; !END_OF_HOB_LIST (Hob); Hob.Raw = GET_NEXT_HOB (Hob)) &#123;</span><br><span class="line">      //</span><br><span class="line">      // Skip the Resource Descriptor HOB that contains the PHIT</span><br><span class="line">      //</span><br><span class="line">      if (Hob.ResourceDescriptor == PhitResourceHob) &#123;</span><br><span class="line">        continue;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      //</span><br><span class="line">      // Skip the Resource Descriptor HOB that contains Memory Type Information bins</span><br><span class="line">      //</span><br><span class="line">      if (Hob.ResourceDescriptor == MemoryTypeInformationResourceHob) &#123;</span><br><span class="line">        continue;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      //</span><br><span class="line">      // Skip all HOBs except Resource Descriptor HOBs</span><br><span class="line">      //</span><br><span class="line">      if (GET_HOB_TYPE (Hob) != EFI_HOB_TYPE_RESOURCE_DESCRIPTOR) &#123;</span><br><span class="line">        continue;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      //</span><br><span class="line">      // Skip Resource Descriptor HOBs that do not describe tested system memory below MAX_ALLOC_ADDRESS</span><br><span class="line">      //</span><br><span class="line">      ResourceHob = Hob.ResourceDescriptor;</span><br><span class="line">      if (ResourceHob-&gt;ResourceType != EFI_RESOURCE_SYSTEM_MEMORY) &#123;</span><br><span class="line">        continue;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      if ((ResourceHob-&gt;ResourceAttribute &amp; MEMORY_ATTRIBUTE_MASK) != TESTED_MEMORY_ATTRIBUTES) &#123;</span><br><span class="line">        continue;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      //</span><br><span class="line">      // Check for potential overflow before addition</span><br><span class="line">      //</span><br><span class="line">      if (ResourceHob-&gt;PhysicalStart &gt; MAX_UINT64 - ResourceHob-&gt;ResourceLength) &#123;</span><br><span class="line">        ASSERT (FALSE);</span><br><span class="line">        ResourceHobMemoryTop = MAX_UINT64;</span><br><span class="line">      &#125; else &#123;</span><br><span class="line">        ResourceHobMemoryTop = ResourceHob-&gt;PhysicalStart + ResourceHob-&gt;ResourceLength;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      if (ResourceHobMemoryTop &gt; (EFI_PHYSICAL_ADDRESS)MAX_ALLOC_ADDRESS) &#123;</span><br><span class="line">        continue;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      //</span><br><span class="line">      // Skip Resource Descriptor HOBs that are below a previously found Resource Descriptor HOB</span><br><span class="line">      //</span><br><span class="line">      if ((HighAddress != (EFI_PHYSICAL_ADDRESS)MAX_ALLOC_ADDRESS) &amp;&amp; (ResourceHob-&gt;PhysicalStart &lt;= HighAddress)) &#123;</span><br><span class="line">        continue;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      //</span><br><span class="line">      // Skip Resource Descriptor HOBs that are not large enough to initilize the DXE Core</span><br><span class="line">      //</span><br><span class="line">      TestedMemoryBaseAddress = PageAlignAddress (ResourceHob-&gt;PhysicalStart);</span><br><span class="line">      TestedMemoryLength      = PageAlignLength (ResourceHobMemoryTop - TestedMemoryBaseAddress);</span><br><span class="line">      FindLargestFreeRegion (&amp;TestedMemoryBaseAddress, &amp;TestedMemoryLength, (EFI_HOB_MEMORY_ALLOCATION *)GetFirstHob (EFI_HOB_TYPE_MEMORY_ALLOCATION));</span><br><span class="line">      if (TestedMemoryLength &lt; MinimalMemorySizeNeeded) &#123;</span><br><span class="line">        continue;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      //</span><br><span class="line">      // Save the range described by the Resource Descriptor that is large enough to initilize the DXE Core</span><br><span class="line">      //</span><br><span class="line">      BaseAddress = TestedMemoryBaseAddress;</span><br><span class="line">      Length      = TestedMemoryLength;</span><br><span class="line">      Attributes  = ResourceHob-&gt;ResourceAttribute;</span><br><span class="line">      HighAddress = ResourceHob-&gt;PhysicalStart;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  DEBUG ((DEBUG_INFO, &quot;CoreInitializeMemoryServices:\n&quot;));</span><br><span class="line">  DEBUG ((DEBUG_INFO, &quot;  BaseAddress - 0x%lx Length - 0x%lx MinimalMemorySizeNeeded - 0x%lx\n&quot;, BaseAddress, Length, MinimalMemorySizeNeeded));</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // If no memory regions are found that are big enough to initialize the DXE core, then ASSERT().</span><br><span class="line">  //</span><br><span class="line">  ASSERT (Length &gt;= MinimalMemorySizeNeeded);</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Convert the Resource HOB Attributes to an EFI Memory Capabilities mask</span><br><span class="line">  //</span><br><span class="line">  if ((Attributes &amp; EFI_RESOURCE_ATTRIBUTE_MORE_RELIABLE) == EFI_RESOURCE_ATTRIBUTE_MORE_RELIABLE) &#123;</span><br><span class="line">    Capabilities = CoreConvertResourceDescriptorHobAttributesToCapabilities (EfiGcdMemoryTypeMoreReliable, Attributes);</span><br><span class="line">  &#125; else &#123;</span><br><span class="line">    Capabilities = CoreConvertResourceDescriptorHobAttributesToCapabilities (EfiGcdMemoryTypeSystemMemory, Attributes);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  if (MemoryTypeInformationResourceHob != NULL) &#123;</span><br><span class="line">    //</span><br><span class="line">    // If a Memory Type Information Resource HOB was found, then use the address</span><br><span class="line">    // range of the  Memory Type Information Resource HOB as the preferred</span><br><span class="line">    // address range for the Memory Type Information bins.</span><br><span class="line">    //</span><br><span class="line">    CoreSetMemoryTypeInformationRange (</span><br><span class="line">      MemoryTypeInformationResourceHob-&gt;PhysicalStart,</span><br><span class="line">      MemoryTypeInformationResourceHob-&gt;ResourceLength,</span><br><span class="line">      gMemoryTypeInformation,</span><br><span class="line">      &amp;mMemoryTypeInformationInitialized,</span><br><span class="line">      mMemoryTypeStatistics,</span><br><span class="line">      &amp;mDefaultMaximumAddress</span><br><span class="line">      );</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Declare the very first memory region, so the EFI Memory Services are available.</span><br><span class="line">  //</span><br><span class="line">  CoreAddMemoryDescriptor (</span><br><span class="line">    EfiConventionalMemory,</span><br><span class="line">    BaseAddress,</span><br><span class="line">    RShiftU64 (Length, EFI_PAGE_SHIFT),</span><br><span class="line">    Capabilities</span><br><span class="line">    );</span><br><span class="line"></span><br><span class="line">  *MemoryBaseAddress = BaseAddress;</span><br><span class="line">  *MemoryLength      = Length;</span><br><span class="line"></span><br><span class="line">  return EFI_SUCCESS;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>从 PEI 交付的 HOB 链里，找到一块满足最小尺寸要求的可用实测系统内存，注册成第一块 EfiConventionalMemory，让 gBS 内存分配、内存池先跑起来，为后续 GCD 全量资源枚举铺路。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">//</span><br><span class="line">// Point at the first HOB.  This must be the PHIT HOB.</span><br><span class="line">//</span><br><span class="line">Hob.Raw = *HobStart;</span><br><span class="line">ASSERT (GET_HOB_TYPE (Hob) == EFI_HOB_TYPE_HANDOFF);</span><br><span class="line">//</span><br><span class="line">// Initialize the spin locks and maps in the memory services.</span><br><span class="line">// Also fill in the memory services into the EFI Boot Services Table</span><br><span class="line">//</span><br><span class="line">CoreInitializePool ();</span><br></pre></td></tr></table></figure></div>
+
+<p>第一个hob 需要指向PHIT HOB，PE—&gt;DXE 交接的总入口，里面包含：<code>EfiFreeMemoryBottom / EfiFreeMemoryTop / EfiMemoryTop</code> 这些关键内存边界；</p>
+<p><code>CoreInitializePool()</code>：初始化 DXE 内存池（gBS AllocatePool 的底层），初始化自旋锁、内存池管理结构；</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">if (PcdGet64 (PcdLoadModuleAtFixAddressEnable) != 0) &#123;</span><br><span class="line">  ReservedCodePageNumber  = PcdGet32 (PcdLoadFixAddressRuntimeCodePageNumber);</span><br><span class="line">  ReservedCodePageNumber += PcdGet32 (PcdLoadFixAddressBootTimeCodePageNumber);</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // cache the Top address for loading modules at Fixed Address</span><br><span class="line">  //</span><br><span class="line">  gLoadModuleAtFixAddressConfigurationTable.DxeCodeTopAddress = PhitHob-&gt;EfiMemoryTop</span><br><span class="line">                                                                + EFI_PAGES_TO_SIZE (ReservedCodePageNumber);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>根据PCD 定义执行预定义的固定地址加载 DXE 驱动时，预计算 DxeCodeTopAddress，用于 Runtime&#x2F;BS 驱动固定地址重定位。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">MemoryTypeInformationResourceHob = NULL;</span><br><span class="line">Status                           = PopulateMemoryTypeInformation (gMemoryTypeInformation);</span><br><span class="line">if (EFI_ERROR (Status)) &#123;</span><br><span class="line">  DEBUG ((DEBUG_WARN, &quot;No Memory Type Information HOB found, S4 resume will likely fail\n&quot;));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">MemoryTypeInformationResourceHob = GetMemoryTypeInformationResourceHob (</span><br><span class="line">                                     HobStart,</span><br><span class="line">                                     gMemoryTypeInformation</span><br><span class="line">                                     );</span><br></pre></td></tr></table></figure></div>
+
+<p>Memory Type Information HOB：记录每种 UEFI 内存类型（BS_Data、RT_Code、RT_Data 等）预估占用页数；</p>
+<p>作用：S4 休眠唤醒时，固件需要提前预留足够 Runtime 内存，防止 OS 启动时 Runtime 内存不够；找不到这个 HOB 会打 WARN：<strong>S4 resume 大概率失败</strong>；</p>
+<p>后面如果这个 HOB 和 PHIT 所在的 Resource HOB 是同一块，就丢弃它，避免冲突。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">MinimalMemorySizeNeeded = MINIMUM_INITIAL_MEMORY_SIZE + CalculateTotalMemoryBinSizeNeeded (NULL, gMemoryTypeInformation);</span><br></pre></td></tr></table></figure></div>
+
+<p><code>MinimalMemorySizeNeeded</code>：<strong>启动 DXE Core 必须的最小内存门槛</strong> &#x3D; DXE 基础最小内存 + 所有内存类型 bin 需要的总大小； 后面所有内存查找循环都拿这个值做判定，不够就换一块区域。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">for (Hob.Raw = *HobStart; !END_OF_HOB_LIST (Hob); Hob.Raw = GET_NEXT_HOB (Hob)) &#123;  ...</span><br><span class="line">for (Hob.Raw = *HobStart; !END_OF_HOB_LIST (Hob); Hob.Raw = GET_NEXT_HOB (Hob)) &#123;  ...</span><br></pre></td></tr></table></figure></div>
+
+<ol>
+<li>第一轮 for 循环：遍历 HOB 链表，筛选<strong>已测试系统内存类型的 Resource Descriptor HOB</strong>，找到包含 PHIT 自由内存区间的资源 HOB；按优先级尝试提取空闲内存，扣除 PEI 已分配内存，判断是否满足 DXE 启动最小内存需求，满足则选定该内存区域。</li>
+<li>兜底 for 循环：第一轮选出的内存不足时，再次遍历 HOB，跳过 PHIT 资源 HOB 与内存类型信息 HOB，<strong>从高地址向低地址</strong>查找符合条件、大小足够的可用系统内存，优先保留低位内存给需要 &lt; 4G 的设备。</li>
+</ol>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">if ((Attributes &amp; EFI_RESOURCE_ATTRIBUTE_MORE_RELIABLE) == EFI_RESOURCE_ATTRIBUTE_MORE_RELIABLE) &#123;</span><br><span class="line">  Capabilities = CoreConvertResourceDescriptorHobAttributesToCapabilities (EfiGcdMemoryTypeMoreReliable, Attributes);</span><br><span class="line">&#125; else &#123;</span><br><span class="line">  Capabilities = CoreConvertResourceDescriptorHobAttributesToCapabilities (EfiGcdMemoryTypeSystemMemory, Attributes);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>把 PEI Resource HOB 的<strong>资源属性标志</strong>，转换成 GCD 识别的<strong>内存能力掩码 Capabilities</strong>（WB&#x2F;WC&#x2F;UC、ECC、可靠内存等）；</p>
+<p><code>MORE_RELIABLE</code>：平台上更高可靠性内存（比如 RAS 内存），标记为<code>EfiGcdMemoryTypeMoreReliable</code>，否则普通系统内存；</p>
+<p>这个 Capabilities 后续传给内存描述符，是 GCD &#x2F; 内存服务识别缓存、硬件特性的依据。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">if (MemoryTypeInformationResourceHob != NULL) &#123;</span><br><span class="line">  //</span><br><span class="line">  // If a Memory Type Information Resource HOB was found, then use the address</span><br><span class="line">  // range of the  Memory Type Information Resource HOB as the preferred</span><br><span class="line">  // address range for the Memory Type Information bins.</span><br><span class="line">  //</span><br><span class="line">  CoreSetMemoryTypeInformationRange (</span><br><span class="line">    MemoryTypeInformationResourceHob-&gt;PhysicalStart,</span><br><span class="line">    MemoryTypeInformationResourceHob-&gt;ResourceLength,</span><br><span class="line">    gMemoryTypeInformation,</span><br><span class="line">    &amp;mMemoryTypeInformationInitialized,</span><br><span class="line">    mMemoryTypeStatistics,</span><br><span class="line">    &amp;mDefaultMaximumAddress</span><br><span class="line">    );</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>仅当存在独立的 Memory Type Information 资源 HOB 才进入；</p>
+<p>给 S4 休眠恢复用：指定一块优先区域，用来预分配 Runtime Code&#x2F;Runtime Data 等内存 bin；</p>
+<p>S4 resume 时固件要提前预留好各类 Runtime 内存，避免 OS 启动时 Runtime 内存耗尽；</p>
+<p>没有这个 HOB 就走默认地址上限策略。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">CoreAddMemoryDescriptor (</span><br><span class="line">  EfiConventionalMemory,</span><br><span class="line">  BaseAddress,</span><br><span class="line">  RShiftU64 (Length, EFI_PAGE_SHIFT),</span><br><span class="line">  Capabilities</span><br><span class="line">  );</span><br><span class="line"></span><br><span class="line">*MemoryBaseAddress = BaseAddress;</span><br><span class="line">*MemoryLength      = Length;</span><br><span class="line"></span><br><span class="line">return EFI_SUCCESS;</span><br></pre></td></tr></table></figure></div>
+
+<p>向 DXE 内存服务链表注册<strong>第一块常规可用内存 EfiConventionalMemory</strong>；</p>
+<p><code>RShiftU64(Length, EFI_PAGE_SHIFT)</code>：字节长度转成<strong>页计数</strong>（UEFI 内存管理以页为单位）；</p>
+<p>这一步执行完，<strong>BootService 的 AllocatePages、AllocatePool 才真正可用</strong>；</p>
+<p>将选中的初始内存范围回填输出参数，返回给上层调用方（DxeCore 主流程）；</p>
+<p>上层拿到这块内存，继续执行后续：GCD 初始化、BS 表完善、Protocol 数据库初始化、加载 DXE 驱动。</p>
+
+		</div>
+
+		
+		<div class="post-copyright-info w-full my-8 px-2 sm:px-6 md:px-8">
+			<div class="article-copyright-info-container">
+    <ul>
+        <li><strong>Title:</strong> DXE Phase 8 DXE Core GCD 服务(1)</li>
+        <li><strong>Author:</strong> Meteor Liu</li>
+        <li><strong>Created at
+                :</strong> 2026-11-17 10:46:54</li>
+        
+            <li>
+                <strong>Updated at
+                    :</strong> 2026-11-17 15:49:34
+            </li>
+        
+        <li>
+            <strong>Link:</strong> https://meteorcool.github.io/2026/11/17/DXE-Phase-8-DXE-Core-GCD-服务/
+        </li>
+        <li>
+            <strong>
+                License:
+            </strong>
+            
+
+            
+                This work is licensed under <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY-NC-SA 4.0</a>.
+            
+        </li>
+    </ul>
+</div>
+
+		</div>
+		
+
+		
+		<ul class="post-tags-box text-lg mt-1.5 flex-wrap justify-center flex md:hidden">
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/DXE/">#DXE</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/Code/">#Code</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/Memory/">#Memory</a>&nbsp;
+			</li>
+			
+		</ul>
+		
+
+		
+
+		
+		<div class="article-nav my-8 flex justify-between items-center px-2 sm:px-6 md:px-8">
+			
+			
+			<div class="article-next border-border-color shadow-redefine-flat shadow-shadow-color-2 rounded-medium px-4 py-2 hover:shadow-redefine-flat-hover hover:shadow-shadow-color-2">
+				<a class="next" rel="next" href="/2026/11/16/DXE-phase-7-DXE-Core-%E7%9A%84%E5%86%85%E5%AD%98%E6%9C%8D%E5%8A%A1/">
+					<span class="title flex justify-center items-center">
+						<span class="post-nav-title-item truncate max-w-48">DXE phase 7 DXE Core 的内存服务</span>
+						<span class="post-nav-item">Next posts</span>
+					</span>
+					<span class="right arrow-icon flex justify-center items-center">
+						<i class="fa-solid fa-chevron-right"></i>
+					</span>
+				</a>
+			</div>
+			
+		</div>
+		
+
+
+		
+		<div class="comment-container px-2 sm:px-6 md:px-8 pb-8">
+			<div class="comments-container mt-10 w-full ">
+    <div id="comment-anchor" class="w-full h-2.5"></div>
+    <div class="comment-area-title w-full my-1.5 md:my-2.5 text-xl md:text-3xl font-bold">
+        Comments
+    </div>
+    
+
+        
+            
+    <div id="waline"></div>
+    <script type="module" data-swup-reload-script>
+      import { init } from '/js/libs/waline.js';
+
+      (function() {
+        const startPath = location.pathname;
+        const startTime = Date.now();
+        const retryDelay = 200;
+        const retryLimit = 5000;
+
+        const runWaline = () => {
+          if (location.pathname !== startPath) {
+            return;
+          }
+
+          const container = document.getElementById('waline');
+          if (!container) {
+            if (Date.now() - startTime < retryLimit) {
+              setTimeout(runWaline, retryDelay);
+            }
+            return;
+          }
+
+          if (window.redefineWalineInstance?.destroy) {
+            window.redefineWalineInstance.destroy();
+          }
+
+          container.innerHTML = '';
+          window.redefineWalineInstance = init({
+            el: '#waline',
+            serverURL: 'https://example.example.com',
+            path: location.pathname,
+            dark: 'body[class~="dark-mode"]',
+            reaction: false,
+            requiredMeta: ['nick', 'mail'],
+            emoji: [],
+                      lang: 'zh-CN',
+          });
+        };
+
+        runWaline();
+      })();
+    </script>
+
+
+
+        
+    
+</div>
+
+		</div>
+		
+	</div>
+
+	
+	<div class="toc-content-container">
+		<div class="post-toc-wrap">
+	<div class="post-toc">
+		<div class="toc-title">On this page</div>
+		<div class="page-title">DXE Phase 8 DXE Core GCD 服务(1)</div>
+		<ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#GCD-%E7%AE%A1%E7%90%86%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-text">GCD 管理系统的初始化</span></a></li></ol>
+
+	</div>
+</div>
+	</div>
+	
+</div>
+
+			</div>
+
+			
+		</div>
+
+		<div class="main-content-footer">
+			<footer class="footer mt-5 py-5 h-auto text-base text-third-text-color relative border-t-2 border-t-border-color">
+    <div class="info-container py-3 text-center">
+        
+            <div class="customize-info my-1">BIOS · EC · ARM  /IPC * Notebook | Powered‑by‑Meteor Liu</div>
+        
+        <div class="text-center">
+            &copy;
+            
+              <span>2022</span>
+              -
+            
+            2026&nbsp;&nbsp;<i class="fa-solid fa-heart fa-beat" style="--fa-animation-duration: 0.5s; color: #f54545"></i>&nbsp;&nbsp;<a href="/">Meteor Liu</a>
+            
+                
+                <p class="post-count space-x-0.5">
+                    <span>
+                        22 posts in total
+                    </span>
+                    
+                </p>
+            
+        </div>
+        
+        
+        
+            <div>
+                Blog up for <span class="odometer" id="runtime_days" ></span> days <span class="odometer" id="runtime_hours"></span> hrs <span class="odometer" id="runtime_minutes"></span> Min <span class="odometer" id="runtime_seconds"></span> Sec
+            </div>
+        
+        
+            <script data-swup-reload-script>
+                try {
+                    function odometer_init() {
+                    const elements = document.querySelectorAll('.odometer');
+                    elements.forEach(el => {
+                        new Odometer({
+                            el,
+                            format: '( ddd).dd',
+                            duration: 200
+                        });
+                    });
+                    }
+                    odometer_init();
+                } catch (error) {}
+            </script>
+        
+        
+        
+    </div>  
+</footer>
+		</div>
+	</div>
+
+	
+	<div class="post-tools">
+		<div class="post-tools-container">
+	<ul class="article-tools-list">
+		<!-- TOC aside toggle -->
+		
+		<li class="right-bottom-tools page-aside-toggle">
+			<i class="fa-regular fa-outdent"></i>
+		</li>
+		
+
+		<!-- go comment -->
+		
+		<li class="go-comment">
+			<i class="fa-regular fa-comments"></i>
+		</li>
+		
+	</ul>
+</div>
+	</div>
+	
+
+	<div class="right-side-tools-container">
+		<div class="side-tools-container">
+	<ul class="hidden-tools-list">
+		<li class="right-bottom-tools tool-font-adjust-plus flex justify-center items-center">
+			<i class="fa-regular fa-magnifying-glass-plus"></i>
+		</li>
+
+		<li class="right-bottom-tools tool-font-adjust-minus flex justify-center items-center">
+			<i class="fa-regular fa-magnifying-glass-minus"></i>
+		</li>
+
+		<li class="right-bottom-tools tool-dark-light-toggle flex justify-center items-center">
+			<i class="fa-regular fa-moon"></i>
+		</li>
+
+		<!-- rss -->
+		
+
+		
+
+		<li class="right-bottom-tools tool-scroll-to-bottom flex justify-center items-center">
+			<i class="fa-regular fa-arrow-down"></i>
+		</li>
+	</ul>
+
+	<ul class="visible-tools-list">
+		<li class="right-bottom-tools toggle-tools-list flex justify-center items-center">
+			<i class="fa-regular fa-cog fa-spin"></i>
+		</li>
+		
+		<li class="right-bottom-tools tool-scroll-to-top flex justify-center items-center">
+			<i class="arrow-up fas fa-arrow-up"></i>
+			<span class="percent"></span>
+		</li>
+		
+		
+	</ul>
+</div>
+	</div>
+
+	<div class="image-viewer-container" role="dialog" aria-modal="true" aria-label="Image viewer">
+	<button class="image-viewer-close" type="button" aria-label="Close">
+		<i class="fa-solid fa-xmark"></i>
+	</button>
+	<button class="image-viewer-prev" type="button" aria-label="Prev">
+		<i class="fa-solid fa-chevron-left"></i>
+	</button>
+	<div class="image-viewer-frame">
+		<img src="" alt="">
+	</div>
+	<div class="image-viewer-exif-panel hidden absolute left-1/2 bottom-20 -translate-x-1/2 w-[min(92vw,420px)] max-h-[60vh] overflow-hidden rounded-2xl bg-background-color-transparent-80 p-4 text-left shadow-redefine-flat backdrop-blur-md" role="dialog" aria-label="EXIF" aria-hidden="true">
+		<div class="flex items-center justify-between mb-3">
+			<span class="text-sm font-semibold text-first-text-color">EXIF</span>
+			<button class="image-viewer-exif-close flex h-8 w-8 items-center justify-center rounded-full bg-background-color-transparent-80 text-first-text-color transition hover:bg-background-color-transparent-40" type="button" aria-label="Close">
+				<i class="fa-solid fa-xmark text-[0.65rem]"></i>
+			</button>
+		</div>
+		<div class="image-viewer-exif-cards grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto pr-1 scrollbar-hide"></div>
+		<template class="image-viewer-exif-card-template">
+			<div class="rounded-lg bg-background-color-transparent-40 px-3 py-2">
+				<div class="image-viewer-exif-card-header flex items-center gap-2 mb-1">
+					<i class="image-viewer-exif-card-icon fa-solid fa-circle-info text-xs text-third-text-color"></i>
+					<div class="image-viewer-exif-card-title text-xs font-semibold text-first-text-color"></div>
+				</div>
+				<div class="image-viewer-exif-card-items flex flex-col gap-1"></div>
+			</div>
+		</template>
+	</div>
+	<button class="image-viewer-exif-toggle flex items-center gap-2 hidden absolute left-1/2 bottom-6 -translate-x-1/2 rounded-full border border-border-color bg-background-color-transparent-80 px-4 py-2 text-first-text-color backdrop-blur-md transition hover:bg-background-color-transparent-40" type="button" aria-label="EXIF" aria-expanded="false">
+		<i class="fa-solid fa-circle-info text-xs"></i>
+		<span class="text-xs font-semibold uppercase tracking-wider">EXIF</span>
+	</button>
+	<button class="image-viewer-next" type="button" aria-label="Next">
+		<i class="fa-solid fa-chevron-right"></i>
+	</button>
+</div>
+
+
+	
+
+</main>
+
+
+
+<script src="/js/build/libs/Swup.min.js"></script>
+
+<script src="/js/build/libs/SwupSlideTheme.min.js"></script>
+
+<script src="/js/build/libs/SwupScriptsPlugin.min.js"></script>
+
+<script src="/js/build/libs/SwupProgressPlugin.min.js"></script>
+
+<script src="/js/build/libs/SwupScrollPlugin.min.js"></script>
+
+<script src="/js/build/libs/SwupPreloadPlugin.min.js"></script>
+
+<script>
+    window.swup = new Swup({
+        plugins: [
+            new SwupScriptsPlugin({
+                optin: true,
+            }),
+            new SwupProgressPlugin(),
+            new SwupScrollPlugin({
+                offset: 80,
+            }),
+            new SwupSlideTheme({
+                mainElement: ".main-content-body",
+            }),
+            new SwupPreloadPlugin(),
+        ],
+        containers: ["#swup"],
+    });
+
+    window.dispatchEvent(
+        new CustomEvent("redefine:swup:ready", {
+            detail: {
+                swup: window.swup,
+            },
+        }),
+    );
+</script>
+
+
+
+
+	
+<script src="/js/build/main.js" type="module"></script>
+
+
+
+    
+<script src="/js/build/libs/odometer.min.js"></script>
+
+    
+<link rel="stylesheet" href="/assets/odometer-theme-minimal.css">
+
+
+
+
+
+
+
+  
+<script src="/js/build/libs/Typed.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+<script src="/js/build/libs/moment-with-locales.min.js" data-swup-reload-script=""></script>
+
+
+
+	
+</body>
+
+</html>
