@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="keywords" content="BIOS,ARM,IPC,Notebook,Driver">
+    
+    
+    <meta name="author" content="Meteor Liu">
+    
+    <!-- Completely eliminate flash of wrong theme -->
+    <script>
+        (function() {
+            const THEME_KEY = "REDEFINE-THEME-STATUS";
+            const DARK = "dark", LIGHT = "light";
+            
+            // Get preferred theme
+            function getTheme() {
+                try {
+                    const saved = localStorage.getItem(THEME_KEY);
+                    if (saved) {
+                        const { isDark } = JSON.parse(saved);
+                        return isDark ? DARK : LIGHT;
+                    }
+                } catch (e) {}
+                
+                return matchMedia("(prefers-color-scheme: dark)").matches ? DARK : LIGHT;
+            }
+            
+            // Apply theme to document
+            function applyTheme(theme) {
+                const isDark = theme === DARK;
+                const root = document.documentElement;
+                
+                // Set classes for compatibility
+                root.classList.add(theme);
+                root.classList.remove(isDark ? LIGHT : DARK);
+                root.style.colorScheme = theme;
+            }
+            
+            // Initial application
+            const theme = getTheme();
+            applyTheme(theme);
+            
+            // Listen for system preference changes
+            matchMedia("(prefers-color-scheme: dark)").addEventListener("change", ({ matches }) => {
+                // Only update if using system preference (no localStorage entry)
+                if (!localStorage.getItem(THEME_KEY)) {
+                    applyTheme(matches ? DARK : LIGHT);
+                }
+            });
+            
+            // Set body classes ASAP (before DOMContentLoaded)
+            (function() {
+                const addBodyClass = () => {
+                    const b = document.body;
+                    if (!b) return false;
+                    b.classList.add(theme + "-mode");
+                    return true;
+                };
+
+                // Try immediately
+                if (addBodyClass()) return;
+
+                // Observe until body exists
+                const mo = new MutationObserver(() => {
+                    if (addBodyClass()) mo.disconnect();
+                });
+                mo.observe(document.documentElement, { childList: true, subtree: true });
+            })();
+        })();
+    </script>
+    
+    <!-- preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    
+    <!--- Seo Part-->
+    
+    <link rel="canonical" href="https://meteorcool.github.io/2026/11/16/dxe-phase-7-dxe-core-的内存服务/"/>
+    <meta name="robots" content="index,follow">
+    <meta name="googlebot" content="index,follow">
+    <meta name="revisit-after" content="1 days">
+    
+    
+        
+        <meta name="description" content="Hexo Theme Redefine, Redefine Your Hexo Journey.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DXE phase 7 DXE Core 的内存服务">
+<meta property="og:url" content="https://meteorcool.github.io/2026/11/16/DXE-phase-7-DXE-Core-%E7%9A%84%E5%86%85%E5%AD%98%E6%9C%8D%E5%8A%A1/index.html">
+<meta property="og:site_name" content="Development Notes of Meteor">
+<meta property="og:description" content="Hexo Theme Redefine, Redefine Your Hexo Journey.">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://meteorcool.github.io/images/redefine-og.webp">
+<meta property="article:published_time" content="2026-11-16T06:00:25.000Z">
+<meta property="article:modified_time" content="2026-11-17T02:02:49.659Z">
+<meta property="article:author" content="Meteor Liu">
+<meta property="article:tag" content="Code">
+<meta property="article:tag" content="DXE">
+<meta property="article:tag" content="Memory">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://meteorcool.github.io/images/redefine-og.webp">
+    
+    
+    <!--- Icon Part-->
+    <link rel="icon" type="image/png" href="/images/1710300-795548.svg" sizes="192x192">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/1710300-795548.svg">
+    <meta name="theme-color" content="#009688">
+    <link rel="shortcut icon" href="/images/1710300-795548.svg">
+    <!--- Page Info-->
+    
+    <title>
+        
+            DXE phase 7 DXE Core 的内存服务 | Development Notes of Meteor
+        
+    </title>
+
+    
+<link rel="stylesheet" href="/fonts/Chillax/chillax.css">
+
+
+    <!--- Inject Part-->
+    
+
+    
+<link rel="stylesheet" href="/css/style.css">
+
+
+    
+        
+<link rel="stylesheet" href="/css/build/tailwind.css">
+
+    
+
+    
+<link rel="stylesheet" href="/fonts/GeistMono/geist-mono.css">
+
+    
+<link rel="stylesheet" href="/fonts/Geist/geist.css">
+
+    <!--- Font Part-->
+    
+    
+    
+    
+    
+    
+
+    <script id="hexo-configurations">
+    window.config = {"hostname":"meteorcool.github.io","root":"/","language":"en"};
+    window.theme = {"articles":{"style":{"font_size":"16px","line_height":1.5,"image_border_radius":"14px","image_alignment":"center","image_caption":false,"link_icon":true,"delete_mask":false,"title_alignment":"left","headings_top_spacing":{"h1":"3.2rem","h2":"2.4rem","h3":"1.9rem","h4":"1.6rem","h5":"1.4rem","h6":"1.3rem"}},"word_count":{"enable":true,"count":true,"min2read":true},"author_label":{"enable":true,"auto":false,"list":[]},"code_block":{"copy":true,"style":"mac","highlight_theme":{"light":"github","dark":"vs2015"},"font":{"enable":false,"family":null,"url":null}},"toc":{"enable":true,"max_depth":3,"number":false,"expand":true,"init_open":true},"copyright":{"enable":true,"default":"cc_by_nc_sa"},"lazyload":true,"pangu_js":false,"recommendation":{"enable":false,"title":"推荐阅读","limit":3,"mobile_limit":2,"placeholder":"/images/wallhaven-wqery6-light.webp","skip_dirs":[]}},"colors":{"primary":"#009688","secondary":null,"default_mode":"light"},"global":{"fonts":{"chinese":{"enable":false,"family":null,"url":null},"english":{"enable":false,"family":null,"url":null},"title":{"enable":false,"family":null,"url":null}},"content_max_width":"1000px","sidebar_width":"210px","hover":{"shadow":true,"scale":false},"scroll_progress":{"bar":false,"percentage":true},"website_counter":{"url":"https://cn.vercount.one/js","enable":false,"site_pv":true,"site_uv":true,"post_pv":true},"single_page":true,"preloader":{"enable":false,"custom_message":null},"side_tools":{"gear_rotation":true,"auto_expand":false},"open_graph":{"enable":true,"image":"/images/redefine-og.webp","description":"Hexo Theme Redefine, Redefine Your Hexo Journey."},"google_analytics":{"enable":false,"id":null}},"home_banner":{"enable":true,"style":"fixed","image":{"light":"/images/saihu.jpg","dark":"/images/showmountain.jpg"},"title":"Development Notes of Meteor","subtitle":{"text":["记录与分享","BIOS 技术记录","ARM 开发笔记"],"hitokoto":{"enable":false,"show_author":false,"api":"https://v1.hitokoto.cn"},"typing_speed":100,"backing_speed":80,"starting_delay":500,"backing_delay":1500,"loop":true,"smart_backspace":true},"text_color":{"light":"#fff","dark":"#d1d1b6"},"text_style":{"title_size":"2.8rem","subtitle_size":"1.5rem","line_height":1.2},"custom_font":{"enable":false,"family":null,"url":null},"social_links":{"enable":false,"style":"default","links":[{"icon":"fa-brands fa-github","url":null},{"icon":"fa-brands fa-twitter","url":null},{"icon":"fa-solid fa-at","url":"meteor.liu@petalmail.com"},{"icon":"fa-brands fa-telegram","url":null},{"icon":"/images/custom-icon.svg","url":null}],"qrs":[{"icon":"fa-brands fa-weixin","qr":null},{"icon":"/images/custom-icon.svg","qr":null}]}},"plugins":{"feed":{"enable":false},"aplayer":{"enable":false,"type":"fixed","audios":[{"name":null,"artist":null,"url":null,"cover":null,"lrc":null}]},"mermaid":{"enable":false,"version":"11.4.1","theme":{"light":"default","dark":"dark"}}},"version":"2.9.0","navbar":{"auto_hide":false,"color":{"left":"#f78736","right":"#367df7","transparency":35},"width":{"home":"1200px","pages":"1000px"},"links":{"Home":{"path":"/","icon":"fa-regular fa-house"}},"search":{"enable":false,"preload":true}},"page_templates":{"friends_column":2,"tags_style":"blur","masonry":{"batch_size":12,"initial_batch_size":24}},"home":{"sidebar":{"enable":true,"position":"left","first_item":"menu","announcement":null,"show_on_mobile":true,"links":{"Archives":{"path":"/archives","icon":"fa-regular fa-box-archive","class":"menu-archive"},"EC":{"path":"/categories/EC/","icon":"fa-solid fa-server","class":"menu-ec"},"ARM":{"path":"/categories/ARM/","icon":"fa-solid fa-microchip","class":"menu-arm"},"BIOS":{"path":"/categories/BIOS/","icon":"fa-solid fa-memory","class":"menu-bios"},"Other":{"path":"/categories/Other/","icon":"fa-solid fa-file-lines","class":"menu-other"}}},"article_date_format":"auto","excerpt_length":200,"categories":{"enable":true,"limit":3},"tags":{"enable":true,"limit":3}},"footer":{"runtime":true,"icon":"<i class=\"fa-solid fa-heart fa-beat\" style=\"--fa-animation-duration: 0.5s; color: #f54545\"></i>","start":"2022/8/17 11:45:14","statistics":true,"customize":"BIOS · EC · ARM  /IPC * Notebook | Powered‑by‑Meteor Liu","icp":{"enable":false,"number":null,"url":null}},"footerStart":"2022/8/17 11:45:14","mermaid":{"style":{"light":"default","dark":"dark"}}};
+    window.lang_ago = {"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days ago","week":"%s weeks ago","month":"%s months ago","year":"%s years ago"};
+    window.i18n = {"search":"Search...","toc":"On this page","prev":"Prev","next":"Next","prev_posts":"Prev posts","next_posts":"Next posts","page":"Page %d","recent_posts":"Recent Posts","share":"Share","powered_by":"POWERED BY %s","theme":"THEME","rss_feed":"RSS Feed","category":"Category","categories":"Categories","tag":"Tag","tags":"Tags","post":"Post","posts":"Posts","tagcloud":"Tag Cloud","comment":"Comment","comments":"Comments","home":"Home","archive":"Archive","archives":"Archives","top":"TOP","sticky":"Sticky","go-back-home":"Go Back Home","masonry_loading":"Loading photos...","image_viewer":"Image viewer","close":"Close","exif":{"title":"EXIF","cards":{"camera":"Camera","lens":"Lens","exposure":"Exposure","other":"Other"},"fields":{"make":"Brand","model":"Model","date_taken":"Date taken","lens_model":"Lens","focal_length":"Focal length","focus_mode":"Focus mode","shutter":"Shutter","aperture":"Aperture","iso":"ISO","exposure_program":"Exposure program","exposure_compensation":"Exposure compensation","metering_mode":"Metering mode","flash":"Flash","white_balance":"White balance","latitude":"Latitude","longitude":"Longitude","altitude":"Altitude"},"status":{"loading":"Loading...","no_exif":"No EXIF available","library_missing":"EXIF library not loaded","image_source_missing":"Image source unavailable","unavailable":"EXIF unavailable (blocked by CORS or missing metadata)","flag_unavailable":"EXIF unavailable"}},"about":"About","changelog":"Changelog","links":"Links","link":"Link","friends":"Friends","friend":"Friend","timeline":"Timeline","shuoshuo":"Shuoshuo","bookmarks":"Bookmarks","site_uv":"VISITOR COUNT","site_pv":"TOTAL PAGE VIEWS","read_more":"Read more","wordcount":"Words","min2read":"Mins","status":"Status","runtime":"Blog up for","days":"days","hours":"hrs","minutes":"Min","seconds":"Sec","optimized_by":"and Optimized by Evan","rights":"All Rights Reserved","site_posts":"%s posts in total","site_wordcount":"%s words in total","copyright":{"author":"Author","title":"Title","link":"Link","create_time":"Created at","update_time":"Updated at","license_title":"License","license_content":"This work is licensed under %s.","all_rights_reserved":"All Rights Reserved &#169; %s","public_domain":"This work is in the public domain."},"ago":{"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days ago","week":"%s weeks ago","month":"%s months ago","year":"%s years ago"},"create_time":"Created","update_time":"Updated","expired":"This post is written %s days ago, and the content may not be up to date."};
+    window.data = {"masonry":false};
+  </script>
+    
+    <!--- Fontawesome Part-->
+    
+<link rel="stylesheet" href="/fontawesome/fontawesome.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/brands.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/solid.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/regular.min.css">
+
+    
+    
+    
+    
+</head>
+
+
+<body>
+	<div class="progress-bar-container">
+	
+
+	
+	<span class="pjax-progress-bar"></span>
+	<!--        <span class="swup-progress-icon">-->
+	<!--            <i class="fa-solid fa-circle-notch fa-spin"></i>-->
+	<!--        </span>-->
+	
+</div>
+
+<main class="page-container" id="swup">
+
+	
+
+	<div class="main-content-container flex flex-col justify-between min-h-dvh">
+		<div class="main-content-header">
+			<header class="navbar-container px-6 md:px-12">
+    <div class="navbar-content transition-navbar ">
+        <div class="left">
+            
+            <a class="logo-title" href="/">
+                
+                Development Notes of Meteor
+                
+            </a>
+        </div>
+
+        <div class="right">
+            <!-- PC -->
+            <div class="desktop">
+                <ul class="navbar-list">
+                    
+                        
+                            
+
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class=""
+                                   href="/"
+                                        >
+                                    <i class="fa-regular fa-house fa-fw"></i>
+                                    HOME
+                                    
+                                </a>
+
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                    
+                </ul>
+            </div>
+            <!-- Mobile -->
+            <div class="mobile">
+                
+                <div class="icon-item navbar-bar">
+                    <div class="navbar-bar-middle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile sheet -->
+    <div class="navbar-drawer h-dvh w-full absolute top-0 left-0 bg-background-color flex flex-col justify-between">
+        <ul class="drawer-navbar-list flex flex-col px-4 justify-center items-start">
+            
+                
+                    
+
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full "
+                           href="/"
+                        >
+                            <span>
+                                HOME
+                            </span>
+                            
+                                <i class="fa-regular fa-house fa-sm fa-fw"></i>
+                            
+                        </a>
+                        
+
+                        
+                    </li>
+            
+
+            
+            
+                
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/archives"
+                        >
+                            <span>Archives</span>
+                            <i class="fa-regular fa-box-archive fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/categories/EC/"
+                        >
+                            <span>EC</span>
+                            <i class="fa-solid fa-server fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/categories/ARM/"
+                        >
+                            <span>ARM</span>
+                            <i class="fa-solid fa-microchip fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/categories/BIOS/"
+                        >
+                            <span>BIOS</span>
+                            <i class="fa-solid fa-memory fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/categories/Other/"
+                        >
+                            <span>Other</span>
+                            <i class="fa-solid fa-file-lines fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+            
+        </ul>
+
+        <div class="statistics flex justify-around my-2.5">
+    <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/tags">
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">14</div>
+        <div class="label text-third-text-color text-sm">Tags</div>
+    </a>
+    <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/categories">
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">9</div>
+        <div class="label text-third-text-color text-sm">Categories</div>
+    </a>
+    <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/archives">
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">21</div>
+        <div class="label text-third-text-color text-sm">Posts</div>
+    </a>
+</div>
+    </div>
+
+    <div class="window-mask"></div>
+
+</header>
+
+
+		</div>
+
+		<div class="main-content-body transition-fade-up">
+			
+
+			<div class="main-content">
+				<div class="post-page-container flex relative justify-between box-border w-full h-full">
+	<div class="article-content-container">
+
+		<div class="article-title relative w-full">
+			
+			<div class="w-full flex items-center pt-6 justify-start">
+				<h1 class="article-title-regular text-second-text-color tracking-tight text-4xl md:text-6xl font-semibold px-2 sm:px-6 md:px-8 py-3">DXE phase 7 DXE Core 的内存服务</h1>
+			</div>
+			
+		</div>
+
+		
+		<div class="article-header flex flex-row gap-2 items-center px-2 sm:px-6 md:px-8">
+			<div class="avatar w-[46px] h-[46px] shrink-0 rounded-medium border border-border-color p-px">
+				<img src="/images/avatar.jpg">
+			</div>
+			<div class="info flex flex-col justify-between">
+				<div class="author flex items-center">
+					<span class="name text-default-text-color text-lg font-semibold">Meteor Liu</span>
+					
+					<span class="author-label ml-1.5 text-xs px-2 py-0.5 rounded-small text-third-text-color border border-shadow-color-1">Lv3</span>
+					
+				</div>
+				<div class="meta-info">
+					<div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fa-regular fa-pen-fancy"></i>&nbsp;
+        <span class="desktop">2026-11-16 14:25</span>
+        <span class="mobile">2026-11-16 14:25</span>
+        <span class="hover-info">Created</span>
+    </span>
+    
+        <span class="article-date article-meta-item">
+            <i class="fa-regular fa-wrench"></i>&nbsp;
+            <span class="desktop">2026-11-17 10:02:49</span>
+            <span class="mobile">2026-11-17 10:02:49</span>
+            <span class="hover-info">Updated</span>
+        </span>
+    
+
+    
+        <span class="article-categories article-meta-item">
+            <i class="fa-regular fa-folders"></i>&nbsp;
+            <ul>
+                
+                
+                    
+                        
+                        <li>
+                            <a href="/categories/BIOS/">BIOS</a>&nbsp;
+                        </li>
+                    
+                    
+                
+                    
+                        
+                            <li>></li>
+                        
+                        <li>
+                            <a href="/categories/BIOS/BIOS-Code/">BIOS Code</a>&nbsp;
+                        </li>
+                    
+                    
+                
+                    
+                        
+                            <li>></li>
+                        
+                        <li>
+                            <a href="/categories/BIOS/BIOS-Code/DXE/">DXE</a>&nbsp;
+                        </li>
+                    
+                    
+                
+            </ul>
+        </span>
+    
+    
+        <span class="article-tags article-meta-item">
+            <i class="fa-regular fa-tags"></i>&nbsp;
+            <ul>
+                
+                    <li>
+                        <a href="/tags/DXE/">DXE</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/Code/">Code</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/Memory/">Memory</a>&nbsp;
+                    </li>
+                
+            </ul>
+        </span>
+    
+
+    
+    
+    
+    
+</div>
+
+				</div>
+			</div>
+		</div>
+		
+
+		
+
+
+		<div class="article-content markdown-body px-2 sm:px-6 md:px-8 pb-8">
+			<p>DXE 阶段的动态内存管理服务需要依靠GCD 服务，也就是全局一致性域。</p>
+<p>对于GCD来说，他的功能类似于内存的账本，对内存做登记，记账的功能，但他本身不做内存分配动作。GCD 相当于是整个系统的物理内存大地图。</p>
+<p>1.GCD 会记录每一段物理内存是什么类型：可用DRAM，SPI ROM ，MMIO 还保留的区域</p>
+<p>2.GCD 会记录物理内存的cache 权限 （WB&#x2F;UC&#x2F;WC）</p>
+<p>PEI 阶段会把内存信息通过HOB 传递给DXE，DXE core 则会将可用内存注册到GCD 当中，PCI 枚举如果发现新的MMIO也会注册进去。</p>
+<p>GCD 对外也提供查询一段地址是什么资源、修改缓存属性、新增 &#x2F; 删掉一段地址区间 的功能。</p>
+<p>DXE 内存分配器（AllocatePages &#x2F; AllocatePool） 则是管控内存分发的动作</p>
+<ol>
+<li>先去 GCD 地图里找：<strong>标记为可用普通 DRAM</strong>的区域；</li>
+<li>在这片合法 DRAM 上面，自己维护空闲页链表、堆链表；</li>
+<li><code>AllocatePages</code>：按整页去 GCD 合法内存里拿连续物理页；</li>
+<li><code>AllocatePool</code>：在已经拿到的页面里，再切小块，做堆内存分配；</li>
+<li>Free 的时候，把页面 &#x2F; 小块放回空闲链表。</li>
+</ol>
+<h4 id="DXE-Core-内存服务关键函数分析"><a href="#DXE-Core-内存服务关键函数分析" class="headerlink" title="DXE Core 内存服务关键函数分析"></a><strong>DXE Core 内存服务关键函数分析</strong></h4><p>1.RemoveMemoryMapEntry</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">VOID</span><br><span class="line">RemoveMemoryMapEntry (</span><br><span class="line">  IN OUT MEMORY_MAP  *Entry</span><br><span class="line">  )</span><br><span class="line">&#123;</span><br><span class="line">  RemoveEntryList (&amp;Entry-&gt;Link);</span><br><span class="line">  Entry-&gt;Link.ForwardLink = NULL;</span><br><span class="line"></span><br><span class="line">  if (Entry-&gt;FromPages) &#123;</span><br><span class="line">    //</span><br><span class="line">    // Insert the free memory map descriptor to the end of mFreeMemoryMapEntryList</span><br><span class="line">    //</span><br><span class="line">    InsertTailList (&amp;mFreeMemoryMapEntryList, &amp;Entry-&gt;Link);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>该函数逻辑很简单，它做了两件事情：首先把记录某块存储空间信息的节点从链表中删除，然后 **if (Entry-&gt;FromPages)**对该节点的来源进行判断，如果它是从动态存储空间中分配获得的，那么就把这个节点插入到 mFreeMemoryMapEntryList 这个链表中以供后续的存储分配用来记录存储空间信息。使用mFreeMemoryMapEntryList 可以充分利用已经分配的动态存储空间，这样可以避免频繁的分配、释放用于保存存储空间信息节点的存储空间。 </p>
+<p>2.CoreAddRange</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br></pre></td><td class="code"><pre><span class="line">VOID</span><br><span class="line">CoreAddRange (</span><br><span class="line">  IN EFI_MEMORY_TYPE       Type,</span><br><span class="line">  IN EFI_PHYSICAL_ADDRESS  Start,</span><br><span class="line">  IN EFI_PHYSICAL_ADDRESS  End,</span><br><span class="line">  IN UINT64                Attribute</span><br><span class="line">  )</span><br><span class="line">&#123;</span><br><span class="line">  LIST_ENTRY  *Link;</span><br><span class="line">  MEMORY_MAP  *Entry;</span><br><span class="line"></span><br><span class="line">  ASSERT ((Start &amp; EFI_PAGE_MASK) == 0);</span><br><span class="line">  ASSERT (End &gt; Start);</span><br><span class="line"></span><br><span class="line">  ASSERT_LOCKED (&amp;gMemoryLock);</span><br><span class="line"></span><br><span class="line">  DEBUG ((DEBUG_PAGE, &quot;AddRange: %lx-%lx to %d\n&quot;, Start, End, Type));</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // If memory of type EfiConventionalMemory is being added that includes the page</span><br><span class="line">  // starting at address 0, then zero the page starting at address 0.  This has</span><br><span class="line">  // two benifits.  It helps find NULL pointer bugs and it also maximizes</span><br><span class="line">  // compatibility with operating systems that may evaluate memory in this page</span><br><span class="line">  // for legacy data structures.  If memory of any other type is added starting</span><br><span class="line">  // at address 0, then do not zero the page at address 0 because the page is being</span><br><span class="line">  // used for other purposes.</span><br><span class="line">  //</span><br><span class="line">  if ((Type == EfiConventionalMemory) &amp;&amp; (Start == 0) &amp;&amp; (End &gt;= EFI_PAGE_SIZE - 1)) &#123;</span><br><span class="line">    if ((PcdGet8 (PcdNullPointerDetectionPropertyMask) &amp; BIT0) == 0) &#123;</span><br><span class="line">      SetMem ((VOID *)(UINTN)Start, EFI_PAGE_SIZE, 0);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Memory map being altered so updated key</span><br><span class="line">  //</span><br><span class="line">  mMemoryMapKey += 1;</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // UEFI 2.0 added an event group for notificaiton on memory map changes.</span><br><span class="line">  // So we need to signal this Event Group every time the memory map changes.</span><br><span class="line">  // If we are in EFI 1.10 compatability mode no event groups will be</span><br><span class="line">  // found and nothing will happen we we call this function. These events</span><br><span class="line">  // will get signaled but since a lock is held around the call to this</span><br><span class="line">  // function the notificaiton events will only be called after this function</span><br><span class="line">  // returns and the lock is released.</span><br><span class="line">  //</span><br><span class="line">  CoreNotifySignalList (&amp;gEfiEventMemoryMapChangeGuid);</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Look for adjoining memory descriptor</span><br><span class="line">  //</span><br><span class="line"></span><br><span class="line">  // Two memory descriptors can only be merged if they have the same Type</span><br><span class="line">  // and the same Attribute</span><br><span class="line">  //</span><br><span class="line"></span><br><span class="line">  Link = gMemoryMap.ForwardLink;</span><br><span class="line">  while (Link != &amp;gMemoryMap) &#123;</span><br><span class="line">    Entry = CR (Link, MEMORY_MAP, Link, MEMORY_MAP_SIGNATURE);</span><br><span class="line">    Link  = Link-&gt;ForwardLink;</span><br><span class="line"></span><br><span class="line">    if (Entry-&gt;Type != Type) &#123;</span><br><span class="line">      continue;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    if (Entry-&gt;Attribute != Attribute) &#123;</span><br><span class="line">      continue;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    if (Entry-&gt;End + 1 == Start) &#123;</span><br><span class="line">      Start = Entry-&gt;Start;</span><br><span class="line">      RemoveMemoryMapEntry (Entry);</span><br><span class="line">    &#125; else if (Entry-&gt;Start == End + 1) &#123;</span><br><span class="line">      End = Entry-&gt;End;</span><br><span class="line">      RemoveMemoryMapEntry (Entry);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Add descriptor</span><br><span class="line">  //</span><br><span class="line"></span><br><span class="line">  mMapStack[mMapDepth].Signature    = MEMORY_MAP_SIGNATURE;</span><br><span class="line">  mMapStack[mMapDepth].FromPages    = FALSE;</span><br><span class="line">  mMapStack[mMapDepth].Type         = Type;</span><br><span class="line">  mMapStack[mMapDepth].Start        = Start;</span><br><span class="line">  mMapStack[mMapDepth].End          = End;</span><br><span class="line">  mMapStack[mMapDepth].VirtualStart = 0;</span><br><span class="line">  mMapStack[mMapDepth].Attribute    = Attribute;</span><br><span class="line">  InsertTailList (&amp;gMemoryMap, &amp;mMapStack[mMapDepth].Link);</span><br><span class="line"></span><br><span class="line">  mMapDepth += 1;</span><br><span class="line">  ASSERT (mMapDepth &lt; MAX_MAP_DEPTH);</span><br><span class="line"></span><br><span class="line">  return;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>作用：把一段物理地址区间，加入 DXE 内存管理器的 <code>gMemoryMap</code> 链表（DXE 自己维护的内存区间表，≠GCD、≠UEFI Runtime MemoryMap） 调用时机：DXE 初始化可用内存、或者新增一段可用内存时调用；它是<strong>给内存分配器新增一段可管理内存区间</strong></p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">if ((Type == EfiConventionalMemory) &amp;&amp; (Start == 0) &amp;&amp; (End &gt;= EFI_PAGE_SIZE - 1)) &#123;</span><br><span class="line">  if ((PcdGet8 (PcdNullPointerDetectionPropertyMask) &amp; BIT0) == 0) &#123;</span><br><span class="line">    SetMem ((VOID *)(UINTN)Start, EFI_PAGE_SIZE, 0);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>把物理地址 0 开始的第一页全部清零。</p>
+<ul>
+<li>这段内存是<strong>普通可用内存 EfiConventionalMemory</strong></li>
+<li>起始地址是 0，包含 0 号页</li>
+<li>PCD <code>PcdNullPointerDetectionPropertyMask</code> 的 BIT0 没有开启（开启 &#x3D; 不做清零）</li>
+</ul>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">//</span><br><span class="line">// Memory map being altered so updated key</span><br><span class="line">//</span><br><span class="line">mMemoryMapKey += 1;</span><br><span class="line"></span><br><span class="line">//</span><br><span class="line">// UEFI 2.0 added an event group for notificaiton on memory map changes.</span><br><span class="line">// So we need to signal this Event Group every time the memory map changes.</span><br><span class="line">// If we are in EFI 1.10 compatability mode no event groups will be</span><br><span class="line">// found and nothing will happen we we call this function. These events</span><br><span class="line">// will get signaled but since a lock is held around the call to this</span><br><span class="line">// function the notificaiton events will only be called after this function</span><br><span class="line">// returns and the lock is released.</span><br><span class="line">//</span><br><span class="line">CoreNotifySignalList (&amp;gEfiEventMemoryMapChangeGuid);</span><br></pre></td></tr></table></figure></div>
+
+<p>更新内存 Map 版本号 + 触发内存变更事件</p>
+<p><code>MemoryMapKey</code>：内存 Map 版本 Key。 每次内存布局改动（增删区间）就 + 1。上层调用 <code>GetMemoryMap()</code> 时会带回这个 Key；驱动可以用 Key 判断内存 Map 有没有发生变化。</p>
+<p>触发 <code>gEfiEventMemoryMapChangeGuid</code> 事件组。 凡是注册了这个事件的驱动，会收到通知：<strong>内存布局变了</strong>。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">Link = gMemoryMap.ForwardLink;</span><br><span class="line">while (Link != &amp;gMemoryMap) &#123;</span><br><span class="line">  Entry = CR (Link, MEMORY_MAP, Link, MEMORY_MAP_SIGNATURE);</span><br><span class="line">  Link  = Link-&gt;ForwardLink;</span><br><span class="line"></span><br><span class="line">  if (Entry-&gt;Type != Type) &#123;</span><br><span class="line">    continue;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  if (Entry-&gt;Attribute != Attribute) &#123;</span><br><span class="line">    continue;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  if (Entry-&gt;End + 1 == Start) &#123;</span><br><span class="line">    Start = Entry-&gt;Start;</span><br><span class="line">    RemoveMemoryMapEntry (Entry);</span><br><span class="line">  &#125; else if (Entry-&gt;Start == End + 1) &#123;</span><br><span class="line">    End = Entry-&gt;End;</span><br><span class="line">    RemoveMemoryMapEntry (Entry);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>相邻区间合并<br><strong>只有内存 Type、Attribute 完全一样，才允许合并</strong>（类型不一样、缓存属性不一样，绝对不能合并）。 遍历 gMemoryMap 里所有已存在的内存段：</p>
+<ol>
+<li>左边旧段的末尾 + 1 &#x3D; 新区段起始 → 把新区段的 Start 改成旧段 Start，把旧节点摘除（RemoveMemoryMapEntry）</li>
+<li>右边旧段的起始 &#x3D; 新区段末尾 + 1 → 把新区段的 End 改成旧段 End，把旧节点摘除</li>
+</ol>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">mMapStack[mMapDepth].Signature    = MEMORY_MAP_SIGNATURE;</span><br><span class="line">mMapStack[mMapDepth].FromPages    = FALSE;</span><br><span class="line">mMapStack[mMapDepth].Type         = Type;</span><br><span class="line">mMapStack[mMapDepth].Start        = Start;</span><br><span class="line">mMapStack[mMapDepth].End          = End;</span><br><span class="line">mMapStack[mMapDepth].VirtualStart = 0;</span><br><span class="line">mMapStack[mMapDepth].Attribute    = Attribute;</span><br><span class="line">InsertTailList (&amp;gMemoryMap, &amp;mMapStack[mMapDepth].Link);</span><br><span class="line"></span><br><span class="line">mMapDepth += 1;</span><br><span class="line">ASSERT (mMapDepth &lt; MAX_MAP_DEPTH);</span><br><span class="line"></span><br><span class="line">return;</span><br></pre></td></tr></table></figure></div>
+
+<p>新建节点，插入 gMemoryMap 链表</p>
+<p>函数完整逻辑流程：CoreAddRange 向 DXE 内存管理器注册一段连续物理内存区间：</p>
+<ol>
+<li><p>先处理 0 号页清零（普通可用内存才清）；</p>
+</li>
+<li><p>版本号 + 1，触发内存变更事件；</p>
+</li>
+<li><p>遍历已有内存段，把<strong>同类型、同属性、相邻</strong>的区间合并，旧节点摘除；</p>
+</li>
+<li><p>在栈上创建新 MEMORY_MAP 节点，把合并后的大区间插入 gMemoryMap 链表</p>
+</li>
+<li><p>AllocateMemoryMapEntry</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line">MEMORY_MAP *</span><br><span class="line">AllocateMemoryMapEntry (</span><br><span class="line">  VOID</span><br><span class="line">  )</span><br><span class="line">&#123;</span><br><span class="line">  MEMORY_MAP  *FreeDescriptorEntries;</span><br><span class="line">  MEMORY_MAP  *Entry;</span><br><span class="line">  UINTN       Index;</span><br><span class="line"></span><br><span class="line">  if (IsListEmpty (&amp;mFreeMemoryMapEntryList)) &#123;</span><br><span class="line">    //</span><br><span class="line">    // The list is empty, to allocate one page to refuel the list</span><br><span class="line">    //</span><br><span class="line">    FreeDescriptorEntries = CoreAllocatePoolPages (</span><br><span class="line">                              EfiBootServicesData,</span><br><span class="line">                              EFI_SIZE_TO_PAGES (DEFAULT_PAGE_ALLOCATION_GRANULARITY),</span><br><span class="line">                              DEFAULT_PAGE_ALLOCATION_GRANULARITY,</span><br><span class="line">                              FALSE</span><br><span class="line">                              );</span><br><span class="line">    if (FreeDescriptorEntries != NULL) &#123;</span><br><span class="line">      //</span><br><span class="line">      // Enque the free memmory map entries into the list</span><br><span class="line">      //</span><br><span class="line">      for (Index = 0; Index &lt; DEFAULT_PAGE_ALLOCATION_GRANULARITY / sizeof (MEMORY_MAP); Index++) &#123;</span><br><span class="line">        FreeDescriptorEntries[Index].Signature = MEMORY_MAP_SIGNATURE;</span><br><span class="line">        InsertTailList (&amp;mFreeMemoryMapEntryList, &amp;FreeDescriptorEntries[Index].Link);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">      return NULL;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // dequeue the first descriptor from the list</span><br><span class="line">  //</span><br><span class="line">  Entry = CR (mFreeMemoryMapEntryList.ForwardLink, MEMORY_MAP, Link, MEMORY_MAP_SIGNATURE);</span><br><span class="line">  RemoveEntryList (&amp;Entry-&gt;Link);</span><br><span class="line"></span><br><span class="line">  return Entry;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>该 函 数 的 功 能 是 获 取 一 个动态分配的 存 储 空 间 信 息 节 点 。 <strong>if (IsListEmpty (&amp;mFreeMemoryMapEntryList))</strong>  处 理<br>mFreeMemoryMapEntryList 为空的情况，即如果所有曾经分配过的用于存储空间信息的节点都被用掉了，那么我们就需要去获得一块新的存储空间，CoreAllocatePoolPages 用来获取这样一个新的页面。如果成功获得了新空间，那么在for循环当中，这块空间被分割成一个个 MEMORY_MAP 单元并加入到 mFreeMemoryMapEntryList 中。这样，后续的需要动态存储空间信息的节点就可以在这个链表中获得一个存储描述单元。 </p>
+</li>
+<li><p>CoreFreeMemoryMapStack</p>
+</li>
+</ol>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br></pre></td><td class="code"><pre><span class="line">VOID</span><br><span class="line">CoreFreeMemoryMapStack (</span><br><span class="line">  VOID</span><br><span class="line">  )</span><br><span class="line">&#123;</span><br><span class="line">  MEMORY_MAP  *Entry;</span><br><span class="line">  MEMORY_MAP  *Entry2;</span><br><span class="line">  LIST_ENTRY  *Link2;</span><br><span class="line"></span><br><span class="line">  ASSERT_LOCKED (&amp;gMemoryLock);</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // If already freeing the map stack, then return</span><br><span class="line">  //</span><br><span class="line">  if (mFreeMapStack != 0) &#123;</span><br><span class="line">    return;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // Move the temporary memory descriptor stack into pool</span><br><span class="line">  //</span><br><span class="line">  mFreeMapStack += 1;</span><br><span class="line"></span><br><span class="line">  while (mMapDepth != 0) &#123;</span><br><span class="line">    //</span><br><span class="line">    // Deque an memory map entry from mFreeMemoryMapEntryList</span><br><span class="line">    //</span><br><span class="line">    Entry = AllocateMemoryMapEntry ();</span><br><span class="line"></span><br><span class="line">    // If entry allocation failed once, it is unlikely to succeed moving forward</span><br><span class="line">    // However, we can try since we&#x27;re in the middle of moving list nodes</span><br><span class="line">    if (Entry == NULL) &#123;</span><br><span class="line">      ASSERT (Entry != NULL);</span><br><span class="line">      continue;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    //</span><br><span class="line">    // Update to proper entry</span><br><span class="line">    //</span><br><span class="line">    mMapDepth -= 1;</span><br><span class="line"></span><br><span class="line">    if (mMapStack[mMapDepth].Link.ForwardLink != NULL) &#123;</span><br><span class="line">      //</span><br><span class="line">      // Move this entry to general memory</span><br><span class="line">      //</span><br><span class="line">      RemoveEntryList (&amp;mMapStack[mMapDepth].Link);</span><br><span class="line">      mMapStack[mMapDepth].Link.ForwardLink = NULL;</span><br><span class="line"></span><br><span class="line">      CopyMem (Entry, &amp;mMapStack[mMapDepth], sizeof (MEMORY_MAP));</span><br><span class="line">      Entry-&gt;FromPages = TRUE;</span><br><span class="line"></span><br><span class="line">      //</span><br><span class="line">      // Find insertion location</span><br><span class="line">      //</span><br><span class="line">      for (Link2 = gMemoryMap.ForwardLink; Link2 != &amp;gMemoryMap; Link2 = Link2-&gt;ForwardLink) &#123;</span><br><span class="line">        Entry2 = CR (Link2, MEMORY_MAP, Link, MEMORY_MAP_SIGNATURE);</span><br><span class="line">        if (Entry2-&gt;FromPages &amp;&amp; (Entry2-&gt;Start &gt; Entry-&gt;Start)) &#123;</span><br><span class="line">          break;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      InsertTailList (Link2, &amp;Entry-&gt;Link);</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">      //</span><br><span class="line">      // This item of mMapStack[mMapDepth] has already been dequeued from gMemoryMap list,</span><br><span class="line">      // so here no need to move it to memory.</span><br><span class="line">      //</span><br><span class="line">      InsertTailList (&amp;mFreeMemoryMapEntryList, &amp;Entry-&gt;Link);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  mFreeMapStack -= 1;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>该函数的功能为将临时数组 mMapStack 中的存储空间信息转移到动态分配的存储空间里，由于 mMapStack 的容量有限，这种转移操作是很有必要的。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">if (mFreeMapStack != 0) &#123;</span><br><span class="line">  return;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//</span><br><span class="line">// Move the temporary memory descriptor stack into pool</span><br><span class="line">//</span><br><span class="line">mFreeMapStack += 1;</span><br></pre></td></tr></table></figure></div>
+
+<p>使用了一个全局变量 mFreeMapStack 用于防止该函数被重入。<strong>Entry &#x3D; AllocateMemoryMapEntry ();</strong> 行从 mFreeMemoryMapEntryList 中获得<br>一个存储信息节点单元 Entry。 </p>
+<p>对于临时数组中已有的存储空间信息，</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">RemoveEntryList (&amp;mMapStack[mMapDepth].Link);</span><br><span class="line">      mMapStack[mMapDepth].Link.ForwardLink = NULL;</span><br><span class="line"></span><br><span class="line">      CopyMem (Entry, &amp;mMapStack[mMapDepth], sizeof (MEMORY_MAP));</span><br><span class="line">      Entry-&gt;FromPages = TRUE;</span><br></pre></td></tr></table></figure></div>
+
+<p>完成了存储信息节点的转移，</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">for (Link2 = gMemoryMap.ForwardLink; Link2 != &amp;gMemoryMap; Link2 = Link2-&gt;ForwardLink) &#123;</span><br></pre></td></tr></table></figure></div>
+
+<p>开始的 for 循环遍历了整个存储信息链表来给要加入的存储信息节点找一个恰当的插入位置使得所有动态分配的节点存储信息的起始地址从头节点开始向后 Backward 按照从小到大的顺序排列。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">InsertTailList (Link2, &amp;Entry-&gt;Link);</span><br></pre></td></tr></table></figure></div>
+
+<p>则处理了另外一种情况即临时数组元素中并没有存储信息，那么已经获得的动态存储信息节点就直接被放到了保存空闲存储信息节点的链表 mFreeMemoryMapEntryList中。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mFreeMapStack -= 1;</span><br></pre></td></tr></table></figure></div>
+
+<p>重置了重入保护变量 mFreeMapStack 表示存储空间信息转移的工作已经结束。</p>
+<p>5.PromoteMemoryResource</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br></pre></td><td class="code"><pre><span class="line">BOOLEAN</span><br><span class="line">PromoteMemoryResource (</span><br><span class="line">  VOID</span><br><span class="line">  )</span><br><span class="line">&#123;</span><br><span class="line">  LIST_ENTRY                       *Link;</span><br><span class="line">  EFI_GCD_MAP_ENTRY                *Entry;</span><br><span class="line">  BOOLEAN                          Promoted;</span><br><span class="line">  EFI_PHYSICAL_ADDRESS             StartAddress;</span><br><span class="line">  EFI_PHYSICAL_ADDRESS             EndAddress;</span><br><span class="line">  EFI_GCD_MEMORY_SPACE_DESCRIPTOR  Descriptor;</span><br><span class="line"></span><br><span class="line">  DEBUG ((DEBUG_PAGE, &quot;Promote the memory resource\n&quot;));</span><br><span class="line"></span><br><span class="line">  CoreAcquireGcdMemoryLock ();</span><br><span class="line"></span><br><span class="line">  Promoted = FALSE;</span><br><span class="line">  Link     = mGcdMemorySpaceMap.ForwardLink;</span><br><span class="line">  while (Link != &amp;mGcdMemorySpaceMap) &#123;</span><br><span class="line">    Entry = CR (Link, EFI_GCD_MAP_ENTRY, Link, EFI_GCD_MAP_SIGNATURE);</span><br><span class="line"></span><br><span class="line">    if ((Entry-&gt;GcdMemoryType == EfiGcdMemoryTypeReserved) &amp;&amp;</span><br><span class="line">        (Entry-&gt;EndAddress &lt; MAX_ALLOC_ADDRESS) &amp;&amp;</span><br><span class="line">        ((Entry-&gt;Capabilities &amp; (EFI_MEMORY_PRESENT | EFI_MEMORY_INITIALIZED | EFI_MEMORY_TESTED)) ==</span><br><span class="line">         (EFI_MEMORY_PRESENT | EFI_MEMORY_INITIALIZED)))</span><br><span class="line">    &#123;</span><br><span class="line">      //</span><br><span class="line">      // Update the GCD map</span><br><span class="line">      //</span><br><span class="line">      if ((Entry-&gt;Capabilities &amp; EFI_MEMORY_MORE_RELIABLE) == EFI_MEMORY_MORE_RELIABLE) &#123;</span><br><span class="line">        Entry-&gt;GcdMemoryType = EfiGcdMemoryTypeMoreReliable;</span><br><span class="line">      &#125; else &#123;</span><br><span class="line">        Entry-&gt;GcdMemoryType = EfiGcdMemoryTypeSystemMemory;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      Entry-&gt;Capabilities |= EFI_MEMORY_TESTED;</span><br><span class="line">      Entry-&gt;ImageHandle   = gDxeCoreImageHandle;</span><br><span class="line">      Entry-&gt;DeviceHandle  = NULL;</span><br><span class="line"></span><br><span class="line">      //</span><br><span class="line">      // Add to allocable system memory resource</span><br><span class="line">      //</span><br><span class="line"></span><br><span class="line">      CoreAddRange (</span><br><span class="line">        EfiConventionalMemory,</span><br><span class="line">        Entry-&gt;BaseAddress,</span><br><span class="line">        Entry-&gt;EndAddress,</span><br><span class="line">        Entry-&gt;Capabilities &amp; ~(EFI_MEMORY_PRESENT | EFI_MEMORY_INITIALIZED | EFI_MEMORY_TESTED | EFI_MEMORY_RUNTIME)</span><br><span class="line">        );</span><br><span class="line">      CoreFreeMemoryMapStack ();</span><br><span class="line"></span><br><span class="line">      Promoted = TRUE;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Link = Link-&gt;ForwardLink;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  CoreReleaseGcdMemoryLock ();</span><br><span class="line"></span><br><span class="line">  if (!Promoted) &#123;</span><br><span class="line">    //</span><br><span class="line">    // If freed-memory guard is enabled, we could promote pages from</span><br><span class="line">    // guarded free pages.</span><br><span class="line">    //</span><br><span class="line">    Promoted = PromoteGuardedFreePages (&amp;StartAddress, &amp;EndAddress);</span><br><span class="line">    if (Promoted) &#123;</span><br><span class="line">      if (!EFI_ERROR (CoreGetMemorySpaceDescriptor (StartAddress, &amp;Descriptor))) &#123;</span><br><span class="line">        CoreAddRange (</span><br><span class="line">          EfiConventionalMemory,</span><br><span class="line">          StartAddress,</span><br><span class="line">          EndAddress,</span><br><span class="line">          Descriptor.Capabilities &amp; ~(EFI_MEMORY_PRESENT | EFI_MEMORY_INITIALIZED |</span><br><span class="line">                                      EFI_MEMORY_TESTED | EFI_MEMORY_RUNTIME)</span><br><span class="line">          );</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  return Promoted;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>这个函数作为DXE Core 和GCD 之间沟通的桥梁。其作用是将GCD 内标记的保留的，已初始化的可用的内存升级为系统可用的普通内存，交给内存管理器分配管理。</p>
+<p><strong>CoreAcquireGcdMemoryLock ();</strong></p>
+<p>GCD 内存锁，<strong>保护 GCD 全局链表 mGcdMemorySpaceMap</strong>，防止并发修改 GCD 账本。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Promoted = FALSE;</span><br><span class="line">Link     = mGcdMemorySpaceMap.ForwardLink;</span><br><span class="line">while (Link != &amp;mGcdMemorySpaceMap) &#123;</span><br><span class="line">  Entry = CR (Link, EFI_GCD_MAP_ENTRY, Link, EFI_GCD_MAP_SIGNATURE);</span><br></pre></td></tr></table></figure></div>
+
+<p>遍历GCD全部内存列表，CR 反向找到GCD 节点地址。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">if ((Entry-&gt;GcdMemoryType == EfiGcdMemoryTypeReserved) &amp;&amp;</span><br><span class="line">    (Entry-&gt;EndAddress &lt; MAX_ALLOC_ADDRESS) &amp;&amp;</span><br><span class="line">    ((Entry-&gt;Capabilities &amp; (EFI_MEMORY_PRESENT | EFI_MEMORY_INITIALIZED | EFI_MEMORY_TESTED)) ==</span><br><span class="line">     (EFI_MEMORY_PRESENT | EFI_MEMORY_INITIALIZED)))</span><br><span class="line">&#123;</span><br></pre></td></tr></table></figure></div>
+
+<p>内存升级的条件：</p>
+<ol>
+<li>当前 GCD 类型 &#x3D; <code>EfiGcdMemoryTypeReserved</code></li>
+<li>这段内存结束地址 &lt; <code>MAX_ALLOC_ADDRESS</code>：不超过分配器支持的最大地址（一般是 4G 或者平台限定地址，避开高地址 MMIO &#x2F; 保留区域）</li>
+<li>Capabilities 同时具备：<code>PRESENT（内存存在） + INITIALIZED（已经初始化）</code>，<strong>但是缺少 TESTED（还没打上 TESTED 标记）</strong></li>
+</ol>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">if ((Entry-&gt;Capabilities &amp; EFI_MEMORY_MORE_RELIABLE) == EFI_MEMORY_MORE_RELIABLE) &#123;</span><br><span class="line">  Entry-&gt;GcdMemoryType = EfiGcdMemoryTypeMoreReliable;</span><br><span class="line">&#125; else &#123;</span><br><span class="line">  Entry-&gt;GcdMemoryType = EfiGcdMemoryTypeSystemMemory;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<ul>
+<li><p>如果带 <code>EFI_MEMORY_MORE_RELIABLE</code> 标记 → 升级为高可靠内存类型 <code>EfiGcdMemoryTypeMoreReliable</code></p>
+</li>
+<li><p>否则 → 升级为普通系统内存 <code>EfiGcdMemoryTypeSystemMemory</code></p>
+<p>这一步是告诉GCD 当前内存属于可用内存。</p>
+</li>
+</ul>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Entry-&gt;Capabilities |= EFI_MEMORY_TESTED;</span><br><span class="line"> Entry-&gt;ImageHandle   = gDxeCoreImageHandle;</span><br><span class="line"> Entry-&gt;DeviceHandle  = NULL;</span><br></pre></td></tr></table></figure></div>
+
+<p>内存已经自检完成，可以分配，同时handle 归属于DXECore</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">CoreAddRange (</span><br><span class="line">  EfiConventionalMemory,</span><br><span class="line">  Entry-&gt;BaseAddress,</span><br><span class="line">  Entry-&gt;EndAddress,</span><br><span class="line">  Entry-&gt;Capabilities &amp; ~(EFI_MEMORY_PRESENT | EFI_MEMORY_INITIALIZED | EFI_MEMORY_TESTED | EFI_MEMORY_RUNTIME)</span><br><span class="line">  );</span><br><span class="line">CoreFreeMemoryMapStack ();</span><br><span class="line"></span><br><span class="line">Promoted = TRUE;</span><br></pre></td></tr></table></figure></div>
+
+<p>调用前面提的coreaddrange，把这段内存区间，加入 DXE 内存分配器的 <code>gMemoryMap</code> 链表，类型标记为 <code>EfiConventionalMemory</code>，这是UEFI的普通内存</p>
+<p>CoreFreeMemoryMapStack ： 把 CoreAddRange 产生的栈上临时 MEMORY_MAP 节点迁移成 Page 常驻节点，防止指针跑飞。</p>
+<p>升级完成标志位 true</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CoreReleaseGcdMemoryLock ();</span><br></pre></td></tr></table></figure></div>
+
+<p>释放内存锁定。</p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">if (!Promoted) &#123;</span><br><span class="line">  //</span><br><span class="line">  // If freed-memory guard is enabled, we could promote pages from</span><br><span class="line">  // guarded free pages.</span><br><span class="line">  //</span><br><span class="line">  Promoted = PromoteGuardedFreePages (&amp;StartAddress, &amp;EndAddress);</span><br><span class="line">  if (Promoted) &#123;</span><br><span class="line">    if (!EFI_ERROR (CoreGetMemorySpaceDescriptor (StartAddress, &amp;Descriptor))) &#123;</span><br><span class="line">      CoreAddRange (</span><br><span class="line">        EfiConventionalMemory,</span><br><span class="line">        StartAddress,</span><br><span class="line">        EndAddress,</span><br><span class="line">        Descriptor.Capabilities &amp; ~(EFI_MEMORY_PRESENT | EFI_MEMORY_INITIALIZED |</span><br><span class="line">                                    EFI_MEMORY_TESTED | EFI_MEMORY_RUNTIME)</span><br><span class="line">        );</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p><strong>上面 GCD 遍历没有找到任何可以升级的内存（Promoted 还是 FALSE）</strong>，进入 Freed Memory Guard 功能。</p>
+<ul>
+<li><code>PromoteGuardedFreePages</code>：内存安全保护功能（Guard Page），为了检测内存越界，会预留一部分空闲页作为守卫页； 当系统内存紧张的时候，可以把一部分 Guard 守卫页释放出来，变成可用内存。</li>
+<li>如果成功释放了 Guard 页，同样调用 <code>CoreAddRange</code> 加入内存分配器。</li>
+</ul>
+<p><strong>6.CoreAddMemoryDescriptor</strong></p>
+<div class="code-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line">VOID</span><br><span class="line">CoreAddMemoryDescriptor (</span><br><span class="line">  IN EFI_MEMORY_TYPE       Type,</span><br><span class="line">  IN EFI_PHYSICAL_ADDRESS  Start,</span><br><span class="line">  IN UINT64                NumberOfPages,</span><br><span class="line">  IN UINT64                Attribute</span><br><span class="line">  )</span><br><span class="line">&#123;</span><br><span class="line">  EFI_PHYSICAL_ADDRESS  End;</span><br><span class="line"></span><br><span class="line">  if ((Start &amp; EFI_PAGE_MASK) != 0) &#123;</span><br><span class="line">    return;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  if ((Type &gt;= EfiMaxMemoryType) &amp;&amp; (Type &lt; MEMORY_TYPE_OEM_RESERVED_MIN)) &#123;</span><br><span class="line">    return;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  CoreAcquireMemoryLock ();</span><br><span class="line">  End = Start + LShiftU64 (NumberOfPages, EFI_PAGE_SHIFT) - 1;</span><br><span class="line">  CoreAddRange (Type, Start, End, Attribute);</span><br><span class="line">  CoreFreeMemoryMapStack ();</span><br><span class="line">  CoreReleaseMemoryLock ();</span><br><span class="line"></span><br><span class="line">  ApplyMemoryProtectionPolicy (</span><br><span class="line">    EfiMaxMemoryType,</span><br><span class="line">    Type,</span><br><span class="line">    Start,</span><br><span class="line">    LShiftU64 (NumberOfPages, EFI_PAGE_SHIFT)</span><br><span class="line">    );</span><br><span class="line"></span><br><span class="line">  //</span><br><span class="line">  // If Loading Module At Fixed Address feature is enabled. try to allocate memory with Runtime code &amp; Boot time code type</span><br><span class="line">  //</span><br><span class="line">  if (PcdGet64 (PcdLoadModuleAtFixAddressEnable) != 0) &#123;</span><br><span class="line">    CoreLoadingFixedAddressHook ();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  // Check if we need to allocate the memory bins. This function will immediately return if we have already done so.</span><br><span class="line">  // Pass FALSE to indicate we don&#x27;t need to publish the HOB.</span><br><span class="line">  AllocateMemoryTypeInformationBins (</span><br><span class="line">    &amp;mMemoryTypeInformationInitialized,</span><br><span class="line">    gMemoryTypeInformation,</span><br><span class="line">    mMemoryTypeStatistics,</span><br><span class="line">    &amp;mDefaultMaximumAddress,</span><br><span class="line">    FALSE</span><br><span class="line">    );</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p><code>CoreAddMemoryDescriptor</code> 是上层注册一段内存区间到 DXE 内存分配器的封装函数：先做页对齐、类型合法性校验；持有内存锁调用 CoreAddRange+CoreFreeMemoryMapStack 完成区间注册；之后自动应用内存保护页表策略；可选执行固定地址加载钩子；最后初始化内存类型统计容器。</p>
+<p>其他内存管理的函数汇总：</p>
+<table>
+<thead>
+<tr>
+<th>函数名称</th>
+<th>函数作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CoreConvertPages</td>
+<td>页面类型转换。将一段已经分配好的页面，修改它的 EFI_MEMORY_TYPE（比如 BootServicesData → ConventionalMemory），同步更新 gMemoryMap、内存保护策略，不做物理页的搬移。</td>
+</tr>
+<tr>
+<td>CoreFindFreePagesI</td>
+<td>内部查找空闲页（不带锁版本）。在空闲页链表中搜寻满足页数、地址上限、对齐要求的连续空闲物理页；仅内部调用，调用方必须提前持有 gMemoryLock。</td>
+</tr>
+<tr>
+<td>CoreFindFreePages</td>
+<td>查找空闲页（带锁封装）。先获取内存锁，调用 CoreFindFreePagesI 查找连续空闲页，查找完成释放锁；AllocatePages 的前置查找入口。</td>
+</tr>
+<tr>
+<td>CoreAllocatePages</td>
+<td>AllocatePages 核心实现。根据分配类型（AnyPages&#x2F;MaxAddress&#x2F;Address）调用 CoreFindFreePages 找空闲页；找不到时调用 PromoteMemoryResource 尝试解锁更多内存；找到后标记页面为已分配、更新内存统计。</td>
+</tr>
+<tr>
+<td>CoreFreePages</td>
+<td>释放物理页。把不再使用的连续页面放回空闲页链表；执行相邻空闲块合并，更新内存类型统计；是 FreePages 的底层实现。</td>
+</tr>
+<tr>
+<td>MergeMemoryMapDescriptor</td>
+<td>合并内存描述符。遍历 gMemoryMap，把<strong>同 Type、同 Attribute、地址相邻</strong>的 MEMORY_MAP 节点合并为一个大区间，减少链表节点数量，降低遍历开销，CoreAddRange 内部依赖此逻辑。</td>
+</tr>
+<tr>
+<td>CoreGetMemoryMap</td>
+<td>GetMemoryMap 底层实现。遍历 gMemoryMap，把 DXE 内部 MEMORY_MAP 链表，转换成 UEFI 标准 EFI_MEMORY_DESCRIPTOR，输出给上层（驱动 &#x2F; RT 服务），同时返回 MemoryMapKey。</td>
+</tr>
+<tr>
+<td>CoreTerminateMemoryMap</td>
+<td>销毁 DXE 内存映射。DXE 退出 Boot Services 阶段时调用，清理 gMemoryMap、空闲页链表、空闲描述符池 mFreeMemoryMapEntryList，停止内存分配服务。</td>
+</tr>
+<tr>
+<td>CoreAllocatePoolI</td>
+<td>Pool 分配内部无锁版本。从 Pool 堆里寻找匹配大小的空闲小块；不足时向页分配器申请新页面扩充 Pool；调用方必须持有 gMemoryLock。</td>
+</tr>
+<tr>
+<td>CoreFreePoolI</td>
+<td>Pool 释放内部无锁版本。把 Pool 小块放回空闲堆链表，尝试和前后相邻空闲 Pool 块合并；调用方必须持有 gMemoryLock。</td>
+</tr>
+</tbody></table>
+<p>DXE core 的内存管理流程简述如下：</p>
+<p>整体分为四层：<strong>GCD 地址资源层 → DXE 内存管理层（gMemoryMap） → Page 页分配子系统 → Pool 小块堆子系统</strong></p>
+<ol>
+<li>PEI 将 DRAM 注册进 GCD，初始标记为 Reserved，暂不可分配；</li>
+<li>业务发起 AllocatePages &#x2F; AllocatePool，优先在空闲链表查找；</li>
+<li>空闲不足时触发 <code>PromoteMemoryResource</code>，从 GCD 解锁 Reserved 内存，经由 <code>CoreAddRange + CoreFreeMemoryMapStack</code> 加入 DXE 内存管理链表；</li>
+<li>释放内存时自动合并相邻空闲块，减少碎片；</li>
+<li><code>CoreGetMemoryMap</code> 把内部链表转为标准 UEFI 内存描述符对外输出；</li>
+<li>ExitBootServices 阶段调用 <code>CoreTerminateMemoryMap</code> 销毁 DXE 内存管理结构，停止 BootService 内存分配。</li>
+</ol>
+
+		</div>
+
+		
+		<div class="post-copyright-info w-full my-8 px-2 sm:px-6 md:px-8">
+			<div class="article-copyright-info-container">
+    <ul>
+        <li><strong>Title:</strong> DXE phase 7 DXE Core 的内存服务</li>
+        <li><strong>Author:</strong> Meteor Liu</li>
+        <li><strong>Created at
+                :</strong> 2026-11-16 14:00:25</li>
+        
+            <li>
+                <strong>Updated at
+                    :</strong> 2026-11-17 10:02:49
+            </li>
+        
+        <li>
+            <strong>Link:</strong> https://meteorcool.github.io/2026/11/16/DXE-phase-7-DXE-Core-的内存服务/
+        </li>
+        <li>
+            <strong>
+                License:
+            </strong>
+            
+
+            
+                This work is licensed under <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY-NC-SA 4.0</a>.
+            
+        </li>
+    </ul>
+</div>
+
+		</div>
+		
+
+		
+		<ul class="post-tags-box text-lg mt-1.5 flex-wrap justify-center flex md:hidden">
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/DXE/">#DXE</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/Code/">#Code</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/Memory/">#Memory</a>&nbsp;
+			</li>
+			
+		</ul>
+		
+
+		
+
+		
+		<div class="article-nav my-8 flex justify-between items-center px-2 sm:px-6 md:px-8">
+			
+			
+			<div class="article-next border-border-color shadow-redefine-flat shadow-shadow-color-2 rounded-medium px-4 py-2 hover:shadow-redefine-flat-hover hover:shadow-shadow-color-2">
+				<a class="next" rel="next" href="/2026/09/22/%E5%9F%BA%E4%BA%8EQT-%E6%B5%8B%E8%AF%95%E5%B7%A5%E5%85%B7%E5%BC%80%E5%8F%91-keypad-%E7%AF%87/">
+					<span class="title flex justify-center items-center">
+						<span class="post-nav-title-item truncate max-w-48">基于QT 测试工具开发  keypad 篇</span>
+						<span class="post-nav-item">Next posts</span>
+					</span>
+					<span class="right arrow-icon flex justify-center items-center">
+						<i class="fa-solid fa-chevron-right"></i>
+					</span>
+				</a>
+			</div>
+			
+		</div>
+		
+
+
+		
+		<div class="comment-container px-2 sm:px-6 md:px-8 pb-8">
+			<div class="comments-container mt-10 w-full ">
+    <div id="comment-anchor" class="w-full h-2.5"></div>
+    <div class="comment-area-title w-full my-1.5 md:my-2.5 text-xl md:text-3xl font-bold">
+        Comments
+    </div>
+    
+
+        
+            
+    <div id="waline"></div>
+    <script type="module" data-swup-reload-script>
+      import { init } from '/js/libs/waline.js';
+
+      (function() {
+        const startPath = location.pathname;
+        const startTime = Date.now();
+        const retryDelay = 200;
+        const retryLimit = 5000;
+
+        const runWaline = () => {
+          if (location.pathname !== startPath) {
+            return;
+          }
+
+          const container = document.getElementById('waline');
+          if (!container) {
+            if (Date.now() - startTime < retryLimit) {
+              setTimeout(runWaline, retryDelay);
+            }
+            return;
+          }
+
+          if (window.redefineWalineInstance?.destroy) {
+            window.redefineWalineInstance.destroy();
+          }
+
+          container.innerHTML = '';
+          window.redefineWalineInstance = init({
+            el: '#waline',
+            serverURL: 'https://example.example.com',
+            path: location.pathname,
+            dark: 'body[class~="dark-mode"]',
+            reaction: false,
+            requiredMeta: ['nick', 'mail'],
+            emoji: [],
+                      lang: 'zh-CN',
+          });
+        };
+
+        runWaline();
+      })();
+    </script>
+
+
+
+        
+    
+</div>
+
+		</div>
+		
+	</div>
+
+	
+	<div class="toc-content-container">
+		<div class="post-toc-wrap">
+	<div class="post-toc">
+		<div class="toc-title">On this page</div>
+		<div class="page-title">DXE phase 7 DXE Core 的内存服务</div>
+		
+
+	</div>
+</div>
+	</div>
+	
+</div>
+
+			</div>
+
+			
+		</div>
+
+		<div class="main-content-footer">
+			<footer class="footer mt-5 py-5 h-auto text-base text-third-text-color relative border-t-2 border-t-border-color">
+    <div class="info-container py-3 text-center">
+        
+            <div class="customize-info my-1">BIOS · EC · ARM  /IPC * Notebook | Powered‑by‑Meteor Liu</div>
+        
+        <div class="text-center">
+            &copy;
+            
+              <span>2022</span>
+              -
+            
+            2026&nbsp;&nbsp;<i class="fa-solid fa-heart fa-beat" style="--fa-animation-duration: 0.5s; color: #f54545"></i>&nbsp;&nbsp;<a href="/">Meteor Liu</a>
+            
+                
+                <p class="post-count space-x-0.5">
+                    <span>
+                        21 posts in total
+                    </span>
+                    
+                </p>
+            
+        </div>
+        
+        
+        
+            <div>
+                Blog up for <span class="odometer" id="runtime_days" ></span> days <span class="odometer" id="runtime_hours"></span> hrs <span class="odometer" id="runtime_minutes"></span> Min <span class="odometer" id="runtime_seconds"></span> Sec
+            </div>
+        
+        
+            <script data-swup-reload-script>
+                try {
+                    function odometer_init() {
+                    const elements = document.querySelectorAll('.odometer');
+                    elements.forEach(el => {
+                        new Odometer({
+                            el,
+                            format: '( ddd).dd',
+                            duration: 200
+                        });
+                    });
+                    }
+                    odometer_init();
+                } catch (error) {}
+            </script>
+        
+        
+        
+    </div>  
+</footer>
+		</div>
+	</div>
+
+	
+	<div class="post-tools">
+		<div class="post-tools-container">
+	<ul class="article-tools-list">
+		<!-- TOC aside toggle -->
+		
+		<li class="right-bottom-tools page-aside-toggle">
+			<i class="fa-regular fa-outdent"></i>
+		</li>
+		
+
+		<!-- go comment -->
+		
+		<li class="go-comment">
+			<i class="fa-regular fa-comments"></i>
+		</li>
+		
+	</ul>
+</div>
+	</div>
+	
+
+	<div class="right-side-tools-container">
+		<div class="side-tools-container">
+	<ul class="hidden-tools-list">
+		<li class="right-bottom-tools tool-font-adjust-plus flex justify-center items-center">
+			<i class="fa-regular fa-magnifying-glass-plus"></i>
+		</li>
+
+		<li class="right-bottom-tools tool-font-adjust-minus flex justify-center items-center">
+			<i class="fa-regular fa-magnifying-glass-minus"></i>
+		</li>
+
+		<li class="right-bottom-tools tool-dark-light-toggle flex justify-center items-center">
+			<i class="fa-regular fa-moon"></i>
+		</li>
+
+		<!-- rss -->
+		
+
+		
+
+		<li class="right-bottom-tools tool-scroll-to-bottom flex justify-center items-center">
+			<i class="fa-regular fa-arrow-down"></i>
+		</li>
+	</ul>
+
+	<ul class="visible-tools-list">
+		<li class="right-bottom-tools toggle-tools-list flex justify-center items-center">
+			<i class="fa-regular fa-cog fa-spin"></i>
+		</li>
+		
+		<li class="right-bottom-tools tool-scroll-to-top flex justify-center items-center">
+			<i class="arrow-up fas fa-arrow-up"></i>
+			<span class="percent"></span>
+		</li>
+		
+		
+	</ul>
+</div>
+	</div>
+
+	<div class="image-viewer-container" role="dialog" aria-modal="true" aria-label="Image viewer">
+	<button class="image-viewer-close" type="button" aria-label="Close">
+		<i class="fa-solid fa-xmark"></i>
+	</button>
+	<button class="image-viewer-prev" type="button" aria-label="Prev">
+		<i class="fa-solid fa-chevron-left"></i>
+	</button>
+	<div class="image-viewer-frame">
+		<img src="" alt="">
+	</div>
+	<div class="image-viewer-exif-panel hidden absolute left-1/2 bottom-20 -translate-x-1/2 w-[min(92vw,420px)] max-h-[60vh] overflow-hidden rounded-2xl bg-background-color-transparent-80 p-4 text-left shadow-redefine-flat backdrop-blur-md" role="dialog" aria-label="EXIF" aria-hidden="true">
+		<div class="flex items-center justify-between mb-3">
+			<span class="text-sm font-semibold text-first-text-color">EXIF</span>
+			<button class="image-viewer-exif-close flex h-8 w-8 items-center justify-center rounded-full bg-background-color-transparent-80 text-first-text-color transition hover:bg-background-color-transparent-40" type="button" aria-label="Close">
+				<i class="fa-solid fa-xmark text-[0.65rem]"></i>
+			</button>
+		</div>
+		<div class="image-viewer-exif-cards grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto pr-1 scrollbar-hide"></div>
+		<template class="image-viewer-exif-card-template">
+			<div class="rounded-lg bg-background-color-transparent-40 px-3 py-2">
+				<div class="image-viewer-exif-card-header flex items-center gap-2 mb-1">
+					<i class="image-viewer-exif-card-icon fa-solid fa-circle-info text-xs text-third-text-color"></i>
+					<div class="image-viewer-exif-card-title text-xs font-semibold text-first-text-color"></div>
+				</div>
+				<div class="image-viewer-exif-card-items flex flex-col gap-1"></div>
+			</div>
+		</template>
+	</div>
+	<button class="image-viewer-exif-toggle flex items-center gap-2 hidden absolute left-1/2 bottom-6 -translate-x-1/2 rounded-full border border-border-color bg-background-color-transparent-80 px-4 py-2 text-first-text-color backdrop-blur-md transition hover:bg-background-color-transparent-40" type="button" aria-label="EXIF" aria-expanded="false">
+		<i class="fa-solid fa-circle-info text-xs"></i>
+		<span class="text-xs font-semibold uppercase tracking-wider">EXIF</span>
+	</button>
+	<button class="image-viewer-next" type="button" aria-label="Next">
+		<i class="fa-solid fa-chevron-right"></i>
+	</button>
+</div>
+
+
+	
+
+</main>
+
+
+
+<script src="/js/build/libs/Swup.min.js"></script>
+
+<script src="/js/build/libs/SwupSlideTheme.min.js"></script>
+
+<script src="/js/build/libs/SwupScriptsPlugin.min.js"></script>
+
+<script src="/js/build/libs/SwupProgressPlugin.min.js"></script>
+
+<script src="/js/build/libs/SwupScrollPlugin.min.js"></script>
+
+<script src="/js/build/libs/SwupPreloadPlugin.min.js"></script>
+
+<script>
+    window.swup = new Swup({
+        plugins: [
+            new SwupScriptsPlugin({
+                optin: true,
+            }),
+            new SwupProgressPlugin(),
+            new SwupScrollPlugin({
+                offset: 80,
+            }),
+            new SwupSlideTheme({
+                mainElement: ".main-content-body",
+            }),
+            new SwupPreloadPlugin(),
+        ],
+        containers: ["#swup"],
+    });
+
+    window.dispatchEvent(
+        new CustomEvent("redefine:swup:ready", {
+            detail: {
+                swup: window.swup,
+            },
+        }),
+    );
+</script>
+
+
+
+
+	
+<script src="/js/build/main.js" type="module"></script>
+
+
+
+    
+<script src="/js/build/libs/odometer.min.js"></script>
+
+    
+<link rel="stylesheet" href="/assets/odometer-theme-minimal.css">
+
+
+
+
+
+
+
+  
+<script src="/js/build/libs/Typed.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+<script src="/js/build/libs/moment-with-locales.min.js" data-swup-reload-script=""></script>
+
+
+
+	
+</body>
+
+</html>
