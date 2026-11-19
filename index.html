@@ -536,7 +536,9 @@
                     <div class="home-article-content markdown-body">
                         
                             
-                            
+                            GCD 服务关键函数分析CoreInitializeGcdServices  
+CoreInitializeMemoryServices 是先从 HOB 里挑一块可用内存，给 DxeCore 本身当运行栈 &#x2F; 堆； 
+CoreInitializeGcdServices 才是正式初始化 GCD 全局地址空间管理服务，把 PEI 上报的所有资源 HOB 灌入 GCD，同时同步初始化 U...
                         
                     </div>
 
