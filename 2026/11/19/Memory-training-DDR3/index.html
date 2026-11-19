@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="keywords" content="BIOS,ARM,IPC,Notebook,Driver">
+    
+    
+    <meta name="author" content="Meteor Liu">
+    
+    <!-- Completely eliminate flash of wrong theme -->
+    <script>
+        (function() {
+            const THEME_KEY = "REDEFINE-THEME-STATUS";
+            const DARK = "dark", LIGHT = "light";
+            
+            // Get preferred theme
+            function getTheme() {
+                try {
+                    const saved = localStorage.getItem(THEME_KEY);
+                    if (saved) {
+                        const { isDark } = JSON.parse(saved);
+                        return isDark ? DARK : LIGHT;
+                    }
+                } catch (e) {}
+                
+                return matchMedia("(prefers-color-scheme: dark)").matches ? DARK : LIGHT;
+            }
+            
+            // Apply theme to document
+            function applyTheme(theme) {
+                const isDark = theme === DARK;
+                const root = document.documentElement;
+                
+                // Set classes for compatibility
+                root.classList.add(theme);
+                root.classList.remove(isDark ? LIGHT : DARK);
+                root.style.colorScheme = theme;
+            }
+            
+            // Initial application
+            const theme = getTheme();
+            applyTheme(theme);
+            
+            // Listen for system preference changes
+            matchMedia("(prefers-color-scheme: dark)").addEventListener("change", ({ matches }) => {
+                // Only update if using system preference (no localStorage entry)
+                if (!localStorage.getItem(THEME_KEY)) {
+                    applyTheme(matches ? DARK : LIGHT);
+                }
+            });
+            
+            // Set body classes ASAP (before DOMContentLoaded)
+            (function() {
+                const addBodyClass = () => {
+                    const b = document.body;
+                    if (!b) return false;
+                    b.classList.add(theme + "-mode");
+                    return true;
+                };
+
+                // Try immediately
+                if (addBodyClass()) return;
+
+                // Observe until body exists
+                const mo = new MutationObserver(() => {
+                    if (addBodyClass()) mo.disconnect();
+                });
+                mo.observe(document.documentElement, { childList: true, subtree: true });
+            })();
+        })();
+    </script>
+    
+    <!-- preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    
+    <!--- Seo Part-->
+    
+    <link rel="canonical" href="https://meteorcool.github.io/2026/11/19/memory-training-ddr3/"/>
+    <meta name="robots" content="index,follow">
+    <meta name="googlebot" content="index,follow">
+    <meta name="revisit-after" content="1 days">
+    
+    
+        
+        <meta name="description" content="Hexo Theme Redefine, Redefine Your Hexo Journey.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Memory training (DDR3)">
+<meta property="og:url" content="https://meteorcool.github.io/2026/11/19/Memory-training-DDR3/index.html">
+<meta property="og:site_name" content="Development Notes of Meteor">
+<meta property="og:description" content="Hexo Theme Redefine, Redefine Your Hexo Journey.">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://meteorcool.github.io/images/redefine-og.webp">
+<meta property="article:published_time" content="2026-11-19T02:50:20.000Z">
+<meta property="article:modified_time" content="2026-11-19T06:00:11.996Z">
+<meta property="article:author" content="Meteor Liu">
+<meta property="article:tag" content="Memory">
+<meta property="article:tag" content="Memory training">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://meteorcool.github.io/images/redefine-og.webp">
+    
+    
+    <!--- Icon Part-->
+    <link rel="icon" type="image/png" href="/images/1710300-795548.svg" sizes="192x192">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/1710300-795548.svg">
+    <meta name="theme-color" content="#009688">
+    <link rel="shortcut icon" href="/images/1710300-795548.svg">
+    <!--- Page Info-->
+    
+    <title>
+        
+            Memory training (DDR3) | Development Notes of Meteor
+        
+    </title>
+
+    
+<link rel="stylesheet" href="/fonts/Chillax/chillax.css">
+
+
+    <!--- Inject Part-->
+    
+
+    
+<link rel="stylesheet" href="/css/style.css">
+
+
+    
+        
+<link rel="stylesheet" href="/css/build/tailwind.css">
+
+    
+
+    
+<link rel="stylesheet" href="/fonts/GeistMono/geist-mono.css">
+
+    
+<link rel="stylesheet" href="/fonts/Geist/geist.css">
+
+    <!--- Font Part-->
+    
+    
+    
+    
+    
+    
+
+    <script id="hexo-configurations">
+    window.config = {"hostname":"meteorcool.github.io","root":"/","language":"en"};
+    window.theme = {"articles":{"style":{"font_size":"16px","line_height":1.5,"image_border_radius":"14px","image_alignment":"center","image_caption":false,"link_icon":true,"delete_mask":false,"title_alignment":"left","headings_top_spacing":{"h1":"3.2rem","h2":"2.4rem","h3":"1.9rem","h4":"1.6rem","h5":"1.4rem","h6":"1.3rem"}},"word_count":{"enable":true,"count":true,"min2read":true},"author_label":{"enable":true,"auto":false,"list":[]},"code_block":{"copy":true,"style":"mac","highlight_theme":{"light":"github","dark":"vs2015"},"font":{"enable":false,"family":null,"url":null}},"toc":{"enable":true,"max_depth":3,"number":false,"expand":true,"init_open":true},"copyright":{"enable":true,"default":"cc_by_nc_sa"},"lazyload":true,"pangu_js":false,"recommendation":{"enable":false,"title":"推荐阅读","limit":3,"mobile_limit":2,"placeholder":"/images/wallhaven-wqery6-light.webp","skip_dirs":[]}},"colors":{"primary":"#009688","secondary":null,"default_mode":"light"},"global":{"fonts":{"chinese":{"enable":false,"family":null,"url":null},"english":{"enable":false,"family":null,"url":null},"title":{"enable":false,"family":null,"url":null}},"content_max_width":"1000px","sidebar_width":"210px","hover":{"shadow":true,"scale":false},"scroll_progress":{"bar":false,"percentage":true},"website_counter":{"url":"https://cn.vercount.one/js","enable":false,"site_pv":true,"site_uv":true,"post_pv":true},"single_page":true,"preloader":{"enable":false,"custom_message":null},"side_tools":{"gear_rotation":true,"auto_expand":false},"open_graph":{"enable":true,"image":"/images/redefine-og.webp","description":"Hexo Theme Redefine, Redefine Your Hexo Journey."},"google_analytics":{"enable":false,"id":null}},"home_banner":{"enable":true,"style":"fixed","image":{"light":"/images/saihu.jpg","dark":"/images/showmountain.jpg"},"title":"Development Notes of Meteor","subtitle":{"text":["记录与分享","BIOS 技术记录","ARM 开发笔记"],"hitokoto":{"enable":false,"show_author":false,"api":"https://v1.hitokoto.cn"},"typing_speed":100,"backing_speed":80,"starting_delay":500,"backing_delay":1500,"loop":true,"smart_backspace":true},"text_color":{"light":"#fff","dark":"#d1d1b6"},"text_style":{"title_size":"2.8rem","subtitle_size":"1.5rem","line_height":1.2},"custom_font":{"enable":false,"family":null,"url":null},"social_links":{"enable":false,"style":"default","links":[{"icon":"fa-brands fa-github","url":null},{"icon":"fa-brands fa-twitter","url":null},{"icon":"fa-solid fa-at","url":"meteor.liu@petalmail.com"},{"icon":"fa-brands fa-telegram","url":null},{"icon":"/images/custom-icon.svg","url":null}],"qrs":[{"icon":"fa-brands fa-weixin","qr":null},{"icon":"/images/custom-icon.svg","qr":null}]}},"plugins":{"feed":{"enable":false},"aplayer":{"enable":false,"type":"fixed","audios":[{"name":null,"artist":null,"url":null,"cover":null,"lrc":null}]},"mermaid":{"enable":false,"version":"11.4.1","theme":{"light":"default","dark":"dark"}}},"version":"2.9.0","navbar":{"auto_hide":false,"color":{"left":"#f78736","right":"#367df7","transparency":35},"width":{"home":"1200px","pages":"1000px"},"links":{"Home":{"path":"/","icon":"fa-regular fa-house"}},"search":{"enable":false,"preload":true}},"page_templates":{"friends_column":2,"tags_style":"blur","masonry":{"batch_size":12,"initial_batch_size":24}},"home":{"sidebar":{"enable":true,"position":"left","first_item":"menu","announcement":null,"show_on_mobile":true,"links":{"Archives":{"path":"/archives","icon":"fa-regular fa-box-archive","class":"menu-archive"},"EC":{"path":"/categories/EC/","icon":"fa-solid fa-server","class":"menu-ec"},"ARM":{"path":"/categories/ARM/","icon":"fa-solid fa-microchip","class":"menu-arm"},"BIOS":{"path":"/categories/BIOS/","icon":"fa-solid fa-memory","class":"menu-bios"},"Other":{"path":"/categories/Other/","icon":"fa-solid fa-file-lines","class":"menu-other"}}},"article_date_format":"auto","excerpt_length":200,"categories":{"enable":true,"limit":3},"tags":{"enable":true,"limit":3}},"footer":{"runtime":true,"icon":"<i class=\"fa-solid fa-heart fa-beat\" style=\"--fa-animation-duration: 0.5s; color: #f54545\"></i>","start":"2022/8/17 11:45:14","statistics":true,"customize":"BIOS · EC · ARM  /IPC * Notebook | Powered‑by‑Meteor Liu","icp":{"enable":false,"number":null,"url":null}},"footerStart":"2022/8/17 11:45:14","mermaid":{"style":{"light":"default","dark":"dark"}}};
+    window.lang_ago = {"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days ago","week":"%s weeks ago","month":"%s months ago","year":"%s years ago"};
+    window.i18n = {"search":"Search...","toc":"On this page","prev":"Prev","next":"Next","prev_posts":"Prev posts","next_posts":"Next posts","page":"Page %d","recent_posts":"Recent Posts","share":"Share","powered_by":"POWERED BY %s","theme":"THEME","rss_feed":"RSS Feed","category":"Category","categories":"Categories","tag":"Tag","tags":"Tags","post":"Post","posts":"Posts","tagcloud":"Tag Cloud","comment":"Comment","comments":"Comments","home":"Home","archive":"Archive","archives":"Archives","top":"TOP","sticky":"Sticky","go-back-home":"Go Back Home","masonry_loading":"Loading photos...","image_viewer":"Image viewer","close":"Close","exif":{"title":"EXIF","cards":{"camera":"Camera","lens":"Lens","exposure":"Exposure","other":"Other"},"fields":{"make":"Brand","model":"Model","date_taken":"Date taken","lens_model":"Lens","focal_length":"Focal length","focus_mode":"Focus mode","shutter":"Shutter","aperture":"Aperture","iso":"ISO","exposure_program":"Exposure program","exposure_compensation":"Exposure compensation","metering_mode":"Metering mode","flash":"Flash","white_balance":"White balance","latitude":"Latitude","longitude":"Longitude","altitude":"Altitude"},"status":{"loading":"Loading...","no_exif":"No EXIF available","library_missing":"EXIF library not loaded","image_source_missing":"Image source unavailable","unavailable":"EXIF unavailable (blocked by CORS or missing metadata)","flag_unavailable":"EXIF unavailable"}},"about":"About","changelog":"Changelog","links":"Links","link":"Link","friends":"Friends","friend":"Friend","timeline":"Timeline","shuoshuo":"Shuoshuo","bookmarks":"Bookmarks","site_uv":"VISITOR COUNT","site_pv":"TOTAL PAGE VIEWS","read_more":"Read more","wordcount":"Words","min2read":"Mins","status":"Status","runtime":"Blog up for","days":"days","hours":"hrs","minutes":"Min","seconds":"Sec","optimized_by":"and Optimized by Evan","rights":"All Rights Reserved","site_posts":"%s posts in total","site_wordcount":"%s words in total","copyright":{"author":"Author","title":"Title","link":"Link","create_time":"Created at","update_time":"Updated at","license_title":"License","license_content":"This work is licensed under %s.","all_rights_reserved":"All Rights Reserved &#169; %s","public_domain":"This work is in the public domain."},"ago":{"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days ago","week":"%s weeks ago","month":"%s months ago","year":"%s years ago"},"create_time":"Created","update_time":"Updated","expired":"This post is written %s days ago, and the content may not be up to date."};
+    window.data = {"masonry":false};
+  </script>
+    
+    <!--- Fontawesome Part-->
+    
+<link rel="stylesheet" href="/fontawesome/fontawesome.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/brands.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/solid.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/regular.min.css">
+
+    
+    
+    
+    
+</head>
+
+
+<body>
+	<div class="progress-bar-container">
+	
+
+	
+	<span class="pjax-progress-bar"></span>
+	<!--        <span class="swup-progress-icon">-->
+	<!--            <i class="fa-solid fa-circle-notch fa-spin"></i>-->
+	<!--        </span>-->
+	
+</div>
+
+<main class="page-container" id="swup">
+
+	
+
+	<div class="main-content-container flex flex-col justify-between min-h-dvh">
+		<div class="main-content-header">
+			<header class="navbar-container px-6 md:px-12">
+    <div class="navbar-content transition-navbar ">
+        <div class="left">
+            
+            <a class="logo-title" href="/">
+                
+                Development Notes of Meteor
+                
+            </a>
+        </div>
+
+        <div class="right">
+            <!-- PC -->
+            <div class="desktop">
+                <ul class="navbar-list">
+                    
+                        
+                            
+
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class=""
+                                   href="/"
+                                        >
+                                    <i class="fa-regular fa-house fa-fw"></i>
+                                    HOME
+                                    
+                                </a>
+
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                    
+                </ul>
+            </div>
+            <!-- Mobile -->
+            <div class="mobile">
+                
+                <div class="icon-item navbar-bar">
+                    <div class="navbar-bar-middle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile sheet -->
+    <div class="navbar-drawer h-dvh w-full absolute top-0 left-0 bg-background-color flex flex-col justify-between">
+        <ul class="drawer-navbar-list flex flex-col px-4 justify-center items-start">
+            
+                
+                    
+
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full "
+                           href="/"
+                        >
+                            <span>
+                                HOME
+                            </span>
+                            
+                                <i class="fa-regular fa-house fa-sm fa-fw"></i>
+                            
+                        </a>
+                        
+
+                        
+                    </li>
+            
+
+            
+            
+                
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/archives"
+                        >
+                            <span>Archives</span>
+                            <i class="fa-regular fa-box-archive fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/categories/EC/"
+                        >
+                            <span>EC</span>
+                            <i class="fa-solid fa-server fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/categories/ARM/"
+                        >
+                            <span>ARM</span>
+                            <i class="fa-solid fa-microchip fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/categories/BIOS/"
+                        >
+                            <span>BIOS</span>
+                            <i class="fa-solid fa-memory fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+                    
+                    <li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full">
+                        <a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active"
+                           href="/categories/Other/"
+                        >
+                            <span>Other</span>
+                            <i class="fa-solid fa-file-lines fa-sm fa-fw"></i>
+                        </a>
+                    </li>
+                
+            
+        </ul>
+
+        <div class="statistics flex justify-around my-2.5">
+    <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/tags">
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">15</div>
+        <div class="label text-third-text-color text-sm">Tags</div>
+    </a>
+    <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/categories">
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">10</div>
+        <div class="label text-third-text-color text-sm">Categories</div>
+    </a>
+    <a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/archives">
+        <div class="number text-2xl sm:text-xl text-second-text-color font-semibold">24</div>
+        <div class="label text-third-text-color text-sm">Posts</div>
+    </a>
+</div>
+    </div>
+
+    <div class="window-mask"></div>
+
+</header>
+
+
+		</div>
+
+		<div class="main-content-body transition-fade-up">
+			
+
+			<div class="main-content">
+				<div class="post-page-container flex relative justify-between box-border w-full h-full">
+	<div class="article-content-container">
+
+		<div class="article-title relative w-full">
+			
+			<div class="w-full flex items-center pt-6 justify-start">
+				<h1 class="article-title-regular text-second-text-color tracking-tight text-4xl md:text-6xl font-semibold px-2 sm:px-6 md:px-8 py-3">Memory training (DDR3)</h1>
+			</div>
+			
+		</div>
+
+		
+		<div class="article-header flex flex-row gap-2 items-center px-2 sm:px-6 md:px-8">
+			<div class="avatar w-[46px] h-[46px] shrink-0 rounded-medium border border-border-color p-px">
+				<img src="/images/avatar.jpg">
+			</div>
+			<div class="info flex flex-col justify-between">
+				<div class="author flex items-center">
+					<span class="name text-default-text-color text-lg font-semibold">Meteor Liu</span>
+					
+					<span class="author-label ml-1.5 text-xs px-2 py-0.5 rounded-small text-third-text-color border border-shadow-color-1">Lv3</span>
+					
+				</div>
+				<div class="meta-info">
+					<div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fa-regular fa-pen-fancy"></i>&nbsp;
+        <span class="desktop">2026-11-19 10:50:20</span>
+        <span class="mobile">2026-11-19 10:50:20</span>
+        <span class="hover-info">Created</span>
+    </span>
+    
+        <span class="article-date article-meta-item">
+            <i class="fa-regular fa-wrench"></i>&nbsp;
+            <span class="desktop">2026-11-19 14:11</span>
+            <span class="mobile">2026-11-19 14:11</span>
+            <span class="hover-info">Updated</span>
+        </span>
+    
+
+    
+        <span class="article-categories article-meta-item">
+            <i class="fa-regular fa-folders"></i>&nbsp;
+            <ul>
+                
+                
+                    
+                        
+                        <li>
+                            <a href="/categories/BIOS/">BIOS</a>&nbsp;
+                        </li>
+                    
+                    
+                
+                    
+                        
+                            <li>></li>
+                        
+                        <li>
+                            <a href="/categories/BIOS/Memory/">Memory</a>&nbsp;
+                        </li>
+                    
+                    
+                
+            </ul>
+        </span>
+    
+    
+        <span class="article-tags article-meta-item">
+            <i class="fa-regular fa-tags"></i>&nbsp;
+            <ul>
+                
+                    <li>
+                        <a href="/tags/Memory/">Memory</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/Memory-training/">Memory training</a>&nbsp;
+                    </li>
+                
+            </ul>
+        </span>
+    
+
+    
+    
+    
+    
+</div>
+
+				</div>
+			</div>
+		</div>
+		
+
+		
+
+
+		<div class="article-content markdown-body px-2 sm:px-6 md:px-8 pb-8">
+			<ol>
+<li><p>Memory training 是什么？</p>
+<p>一般来说，memory training 是系统开机上电之后，对内存进行的一次时序校准动作，因为内存中有大量的时序参数，每个参数都需要精准的时序控制，为了避免内存与系统之间的不同步，上电后需要进行一次training之后才允许开机。</p>
+</li>
+<li><p>Memory training 流程</p>
+<p>参考JEDEC JESD79-3 SPEC ，提供了简化状态机图：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/Memory-training-DDR3/image-20261119110115032.png"
+                      alt="image-20261119110115032"
+                ></p>
+<h4 id="①-power-on-上电"><a href="#①-power-on-上电" class="headerlink" title="① power on 上电"></a><strong>①</strong> power on 上电</h4><h4 id="②reset-procedure-程序复位过程"><a href="#②reset-procedure-程序复位过程" class="headerlink" title="②reset procedure 程序复位过程"></a>②reset procedure 程序复位过程</h4><h4 id="③initialization-初始化"><a href="#③initialization-初始化" class="headerlink" title="③initialization  初始化"></a>③initialization  初始化</h4><p>​        对于SO-DIMM，系统会通过SMBUS来读取DIMM上SPD内关于内存模组的配置信息如P-BANK数量、电压、行地址&#x2F;列地址数量、位宽、各种主要操作时序（如CL，tRCD,，tRP，tRAS等），并以此设定内存的工作参数。</p>
+<p>​        而对于ON-Board memory，省掉了SPD，这些内存的配置信息放在了BIOS内，开机时透过我们主板设定的PCB_ID来选择对应的配置信息。</p>
+<p>参考JEDEC JESD79-3 SPEC，DDR 初始化时序如下</p>
+<p>Power up前RESET#电平要低于0.2VDD，Power up后RESET#要保持为low至少200us，在RESET#被拉高之前，CKE至少要拉低10ns，Power up（0.3V~VDDmin）时间要在200ms以内。</p>
+<p>RESET# 拉高后，等待500us，CKE assert，在此时间内，DRAM进行内部的状态初始化，初始化进程与外部clk无关。Clocks(CK，CK#)在CKE active之前要建立和保持至少10ns，最大5 tCK。</p>
+<p>CKE 拉高之后，至少等待tXPR时间，将第一个MRS命令载入Mode Register 2，之后隔tMRD时间，顺序将MRS命令载入MR3,MR1,MR0和进行DLL reset。</p>
+<p>发送ZQCL命令，进行ZQ校准。</p>
+<p>DDR3进入正常操作模式。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/Memory-training-DDR3/image-20261119110512977.png"
+                      alt="image-20261119110512977"
+                ></p>
+</li>
+</ol>
+<h4 id="④ZQ-calibration-ZQ校准-ZQCL-ZQCS"><a href="#④ZQ-calibration-ZQ校准-ZQCL-ZQCS" class="headerlink" title="④ZQ calibration   ZQ校准 ZQCL+ZQCS"></a>④ZQ calibration   ZQ校准 ZQCL+ZQCS</h4><p>​		ZQCL: 上电初始化后，用完成校准ZQ电阻。ZQCL会触发DRAM内部的校准引擎， 一旦校准完成，校准后的值会传递到DRAM的IO管脚上，并反映为输出驱动和ODT阻值。</p>
+<pre><code>	ZQCS: 周期性的校准，能够跟随电压和温度的变化而变化。校准需要更短的时间窗口， 一次校准，可以有效的纠正最小0.5%的RON和RTT电阻。
+</code></pre>
+<h4 id="⑤进入idle状态（根据具体情况选择进入5-1-5-4）"><a href="#⑤进入idle状态（根据具体情况选择进入5-1-5-4）" class="headerlink" title="⑤进入idle状态（根据具体情况选择进入5.1~5.4）"></a>⑤进入idle状态（根据具体情况选择进入5.1~5.4）</h4><p>Idle状态：所有的bank必须预先充电，所有时序满足，DRAM的ODT电阻。RTT必须为高阻。</p>
+<p>​	 <strong>5.1</strong> 配置MRS，MPR寄存器，write leveling</p>
+<p>​     模式寄存器(MR, Mode Register)的设置，简称MRS（MR Set），这一工作由CPU在BIOS的控制下进行，寄存器的信息由地址线来提供。模式寄存器MR没有缺省值，因此必须在上电或者复位后被完全初始化，才能使DDR正常工作。正常工作模式下，MR也可以被重新写入。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/Memory-training-DDR3/image-20261119134104172.png"
+                      alt="image-20261119134104172"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/Memory-training-DDR3/image-20261119134122710.png"
+                      alt="image-20261119134122710"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/Memory-training-DDR3/image-20261119134148247.png"
+                      alt="image-20261119134148247"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/Memory-training-DDR3/image-20261119134206093.png"
+                      alt="image-20261119134206093"
+                ></p>
+<p>MPR : Multi-Purpose Register  多用途寄存器。存储在MPR中的信息可为:</p>
+<ol>
+<li><p>predefined system timing calibration bit sequence(固定码流供timing校正)；</p>
+</li>
+<li><p>on die thermal sensor information (optional);</p>
+</li>
+</ol>
+<p>​		• 为了更好的对DDR3 SDRAM做timing calibration，MPR read command可将predefined bit sequence(0-1-0-1-0-1-0-1)读出至数据总线上，在此data read期间，memory controller会对系统timing做校正直到timing达到最优化。</p>
+<p>​		• 当MR3 A[2] &#x3D; 1时，MPR被enable，此后所有的读取命令都指向MPR，预先定义的0-1数据码流被读出，直到系统timing最优化；当MR3 A[2] &#x3D; 0时，MPR 被disable，读写操作恢复正常.</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/../images/Memory-training-DDR3/image-20261119134553939.png"
+                      alt="image-20261119134553939"
+                ></p>
+<p> <strong>5.2</strong> self-refresh 自刷新。 </p>
+<p><strong>5.3</strong>  refreshing  刷新 （DDR3还新增了局部自刷新(RASR)和根据温度自刷新(SAT)功能）。</p>
+<p>​    <strong>RASR:</strong> 局部自刷新（RASR，Partial Array Self-Refresh）是DDR3的一个可选项，通过这一功能，DDR3内存芯片可以只刷新部分逻辑Bank，而不是全部刷新，从而最大限度的减少因自刷新产生的电力消耗。</p>
+<p>​    <strong>SAT:</strong> 根据温度自动自刷新（SRT Self-Refresh Temperature）为了最大的节省电力，DDR3采用了一种新型的自动自刷新设计 （ASR，Automatic Self-Refresh）。当开始ASR之后，将通过一个内置于DRAM芯片的温度传感器来控制刷新的频率，因为刷新频率高的话，消电就大，温度也随之 升高。而温度传感器则在保证数据不丢失的情况下，尽量减少刷新频率，降低工作温度。</p>
+<p> <strong>5.4 precharge power down</strong> <strong>预充电。</strong></p>
+<p>​     由于SDRAM 的寻址具体独占性，所以在进行完读写操作后，如果要对同一L-Bank 的另一行进行寻址，就要将原来有效（工作）的行关闭，重新发送行&#x2F;列地址。L-Bank 关闭现有工作行，准备打开新行的操作就是预充电（Precharge）。预充电是一种对工作行中所有存储体进行数据重写，并对行地址进行复位，同时释放S-AMP（重新加入比较电压），以准备新的工作。</p>
+<h4 id="⑥-发送activating命令。"><a href="#⑥-发送activating命令。" class="headerlink" title="⑥.发送activating命令。"></a>⑥.发送activating命令。</h4><h4 id="⑦Bank-active"><a href="#⑦Bank-active" class="headerlink" title="⑦Bank active"></a>⑦Bank active</h4><p>​	发送Bank和Raw地址。（BA0-BA2选择BANK、A0-A15选择Row）</p>
+<h4 id="⑧Writing-写操作"><a href="#⑧Writing-写操作" class="headerlink" title="⑧Writing 写操作"></a>⑧Writing 写操作</h4><p>​	发送Write命令并发含带突发操作的起始Column地址（A0-A10），并确定是否发布自动预充电命令（通过A10）和选择BC4或BL8模式（通过A12）。</p>
+<h4 id="⑨Reading-读操作"><a href="#⑨Reading-读操作" class="headerlink" title="⑨Reading 读操作"></a>⑨Reading 读操作</h4><p>​	发送Read命令并发含带突发操作的起始Column地址（A0-A10），并确定是否发布自动预充电命令（通过A10）和选择BC4或BL8模式（通过A12）。</p>
+<h4 id="⑩10-precharge-预充电"><a href="#⑩10-precharge-预充电" class="headerlink" title="⑩10. precharge 预充电"></a>⑩10. precharge 预充电</h4><p>​	和前面的预充电一样</p>
+<p>返回idle状态，等待下一个操作到来。</p>
+<h4 id="DDR3的training过程中遇到的一些时序的含义"><a href="#DDR3的training过程中遇到的一些时序的含义" class="headerlink" title="DDR3的training过程中遇到的一些时序的含义"></a>DDR3的training过程中遇到的一些时序的含义</h4><p>l <strong>tRRD:</strong> 两个不同bank的行有效命令之间的最小时间间隔。</p>
+<p>l <strong>tRC:</strong> 两个相同bank的行有效命令之间的最小时间间隔。</p>
+<p>l <strong>tRCD:</strong> RAS to CAS delay (RAS至CAS延迟)，在发送列读写命令时必须要与行有效命令有一个间隔，这个间隔被定义为tRCD，也可以理解为行选通周期。这应该是根据芯片存储阵列电子元件响应时间(从一种状态到另一种状态变化的过程)所制定的延迟。 tRCD是芯片的一个重要时序参数。tRCD以时钟周期为单位，比如tRCD &#x3D; 2，就代表延迟周期为两个时钟周期，具体到确切的时间，则要根据时钟频率而定。</p>
+<p>l <strong>CL:</strong> 在CAS发出之后，仍要经过一定的时间才能有数据输出，从CAS与读取命令发出到第一笔数据输出的这段时间，被定义为CL（CAS Latency，CAS潜伏期）。由于CL只在读取时出现，所以CL又被称为读取潜伏期（RL，Read Latency）。CL的单位与tRCD一样，为时钟周期数，具体耗时由时钟频率决定。（存储体中晶体管的反应时间会造成数据不可能与CAS在同一上升沿触发，肯定要延后至少一个时钟周期。）</p>
+<p>l **AL:**additive latency附加潜伏期。DDR2开始，为了解决DDR内存指令冲突，允许CAS信号紧跟RAS发送。但读&#x2F;写操作并没有因此而提前，仍有要保证有足够的延迟&#x2F;潜伏期，因此引入附加潜伏期的概念，与CL 一样，单位为时钟周期数。AL+CL 被定义为读取潜伏期（RL，Read Latency），相应的，DDR2还对写入潜伏期（WL，Write Latency）制定了标准，WL是指从写入命令发出到第一笔数据输入的潜伏期。</p>
+<p>l <strong>tAC:</strong> 由于芯片体积的原因，存储单元中的电容容量很小，所以信号要经过放大来保证其有效的识别性，这个放大&#x2F;驱动工作由S-AMP负责，一个存储体对应一个S-AMP通道。但它要有一个准备时间才能保证信号的发送强度（事前还要进行电压比较以进行逻辑电平的判断），因此从数据I&#x2F;O总线上有数据输出之前的一个时钟上升沿开始，数据即已传向S-AMP，也就是说此时数据已经被触发，经过一定的驱动时间最终传向数据I&#x2F;O总线进行输出，这段时间我们称之为tAC（Access Time from CLK，时钟触发后的访问时间）。tAC的单位是ns，对于不同的频率各有不同的明确规定，但必须要小于一个时钟周期，否则会因访问时过长而使效率降低。</p>
+<p>l <strong>tWR:</strong> 写入&#x2F;校正时间（tWR，Write Recovery Time），写操作虽然是0延迟进行，但资料并不是即时地写入存储电容，因为选通三极管(就如读取时一样)与电容的充电必须要有一段时间，所以资料的真正写入需要一定的周期来保证。这个操作也被称作写回（Write Back）。tWR 至少占用一个时钟周期或再多一点（时钟频率越高，tWR 占用周期越多）。</p>
+<p>l <strong>tRP:</strong> Precharge command Period 预充电有效周期，SDRAM的寻址具有独占性，在同一时间只能打开同一Bank的一行，如果要对同一Bank的另一行进行定址，就要将原來有效(工作)的行关闭，重新发送&#x2F;行列地址。关闭现有工作行，准备打开新行的操作就是预充电(precharge)。在发出预充电命令之后，要经过一段时间才能允许发送RAS行有效命令打开新的工作行，这个间隔被称为给出tRP。</p>
+<p>l <strong>tRAS</strong>：（Active to Precharge Command，行有效至预充电命令间隔周期）。它有一个范围，对于PC133 标准，一般是预充电命令至少要在行有效命令5 个时钟周期之后发出，最长间隔视芯片而异（基本在120000ns 左右），否则工作行的数据将有丢失的危险。</p>
+
+		</div>
+
+		
+		<div class="post-copyright-info w-full my-8 px-2 sm:px-6 md:px-8">
+			<div class="article-copyright-info-container">
+    <ul>
+        <li><strong>Title:</strong> Memory training (DDR3)</li>
+        <li><strong>Author:</strong> Meteor Liu</li>
+        <li><strong>Created at
+                :</strong> 2026-11-19 10:50:20</li>
+        
+            <li>
+                <strong>Updated at
+                    :</strong> 2026-11-19 14:00:11
+            </li>
+        
+        <li>
+            <strong>Link:</strong> https://meteorcool.github.io/2026/11/19/Memory-training-DDR3/
+        </li>
+        <li>
+            <strong>
+                License:
+            </strong>
+            
+
+            
+                This work is licensed under <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY-NC-SA 4.0</a>.
+            
+        </li>
+    </ul>
+</div>
+
+		</div>
+		
+
+		
+		<ul class="post-tags-box text-lg mt-1.5 flex-wrap justify-center flex md:hidden">
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/Memory/">#Memory</a>&nbsp;
+			</li>
+			
+			<li class="tag-item mx-0.5">
+				<a href="/tags/Memory-training/">#Memory training</a>&nbsp;
+			</li>
+			
+		</ul>
+		
+
+		
+
+		
+		<div class="article-nav my-8 flex justify-between items-center px-2 sm:px-6 md:px-8">
+			
+			
+			<div class="article-next border-border-color shadow-redefine-flat shadow-shadow-color-2 rounded-medium px-4 py-2 hover:shadow-redefine-flat-hover hover:shadow-shadow-color-2">
+				<a class="next" rel="next" href="/2026/11/17/DXE-Phase-9-DXE-Core-GCD-%E6%9C%8D%E5%8A%A1-2/">
+					<span class="title flex justify-center items-center">
+						<span class="post-nav-title-item truncate max-w-48">DXE Phase 9 DXE Core GCD 服务(2)</span>
+						<span class="post-nav-item">Next posts</span>
+					</span>
+					<span class="right arrow-icon flex justify-center items-center">
+						<i class="fa-solid fa-chevron-right"></i>
+					</span>
+				</a>
+			</div>
+			
+		</div>
+		
+
+
+		
+		<div class="comment-container px-2 sm:px-6 md:px-8 pb-8">
+			<div class="comments-container mt-10 w-full ">
+    <div id="comment-anchor" class="w-full h-2.5"></div>
+    <div class="comment-area-title w-full my-1.5 md:my-2.5 text-xl md:text-3xl font-bold">
+        Comments
+    </div>
+    
+
+        
+            
+    <div id="waline"></div>
+    <script type="module" data-swup-reload-script>
+      import { init } from '/js/libs/waline.js';
+
+      (function() {
+        const startPath = location.pathname;
+        const startTime = Date.now();
+        const retryDelay = 200;
+        const retryLimit = 5000;
+
+        const runWaline = () => {
+          if (location.pathname !== startPath) {
+            return;
+          }
+
+          const container = document.getElementById('waline');
+          if (!container) {
+            if (Date.now() - startTime < retryLimit) {
+              setTimeout(runWaline, retryDelay);
+            }
+            return;
+          }
+
+          if (window.redefineWalineInstance?.destroy) {
+            window.redefineWalineInstance.destroy();
+          }
+
+          container.innerHTML = '';
+          window.redefineWalineInstance = init({
+            el: '#waline',
+            serverURL: 'https://example.example.com',
+            path: location.pathname,
+            dark: 'body[class~="dark-mode"]',
+            reaction: false,
+            requiredMeta: ['nick', 'mail'],
+            emoji: [],
+                      lang: 'zh-CN',
+          });
+        };
+
+        runWaline();
+      })();
+    </script>
+
+
+
+        
+    
+</div>
+
+		</div>
+		
+	</div>
+
+	
+	<div class="toc-content-container">
+		<div class="post-toc-wrap">
+	<div class="post-toc">
+		<div class="toc-title">On this page</div>
+		<div class="page-title">Memory training (DDR3)</div>
+		
+
+	</div>
+</div>
+	</div>
+	
+</div>
+
+			</div>
+
+			
+		</div>
+
+		<div class="main-content-footer">
+			<footer class="footer mt-5 py-5 h-auto text-base text-third-text-color relative border-t-2 border-t-border-color">
+    <div class="info-container py-3 text-center">
+        
+            <div class="customize-info my-1">BIOS · EC · ARM  /IPC * Notebook | Powered‑by‑Meteor Liu</div>
+        
+        <div class="text-center">
+            &copy;
+            
+              <span>2022</span>
+              -
+            
+            2026&nbsp;&nbsp;<i class="fa-solid fa-heart fa-beat" style="--fa-animation-duration: 0.5s; color: #f54545"></i>&nbsp;&nbsp;<a href="/">Meteor Liu</a>
+            
+                
+                <p class="post-count space-x-0.5">
+                    <span>
+                        24 posts in total
+                    </span>
+                    
+                </p>
+            
+        </div>
+        
+        
+        
+            <div>
+                Blog up for <span class="odometer" id="runtime_days" ></span> days <span class="odometer" id="runtime_hours"></span> hrs <span class="odometer" id="runtime_minutes"></span> Min <span class="odometer" id="runtime_seconds"></span> Sec
+            </div>
+        
+        
+            <script data-swup-reload-script>
+                try {
+                    function odometer_init() {
+                    const elements = document.querySelectorAll('.odometer');
+                    elements.forEach(el => {
+                        new Odometer({
+                            el,
+                            format: '( ddd).dd',
+                            duration: 200
+                        });
+                    });
+                    }
+                    odometer_init();
+                } catch (error) {}
+            </script>
+        
+        
+        
+    </div>  
+</footer>
+		</div>
+	</div>
+
+	
+	<div class="post-tools">
+		<div class="post-tools-container">
+	<ul class="article-tools-list">
+		<!-- TOC aside toggle -->
+		
+		<li class="right-bottom-tools page-aside-toggle">
+			<i class="fa-regular fa-outdent"></i>
+		</li>
+		
+
+		<!-- go comment -->
+		
+		<li class="go-comment">
+			<i class="fa-regular fa-comments"></i>
+		</li>
+		
+	</ul>
+</div>
+	</div>
+	
+
+	<div class="right-side-tools-container">
+		<div class="side-tools-container">
+	<ul class="hidden-tools-list">
+		<li class="right-bottom-tools tool-font-adjust-plus flex justify-center items-center">
+			<i class="fa-regular fa-magnifying-glass-plus"></i>
+		</li>
+
+		<li class="right-bottom-tools tool-font-adjust-minus flex justify-center items-center">
+			<i class="fa-regular fa-magnifying-glass-minus"></i>
+		</li>
+
+		<li class="right-bottom-tools tool-dark-light-toggle flex justify-center items-center">
+			<i class="fa-regular fa-moon"></i>
+		</li>
+
+		<!-- rss -->
+		
+
+		
+
+		<li class="right-bottom-tools tool-scroll-to-bottom flex justify-center items-center">
+			<i class="fa-regular fa-arrow-down"></i>
+		</li>
+	</ul>
+
+	<ul class="visible-tools-list">
+		<li class="right-bottom-tools toggle-tools-list flex justify-center items-center">
+			<i class="fa-regular fa-cog fa-spin"></i>
+		</li>
+		
+		<li class="right-bottom-tools tool-scroll-to-top flex justify-center items-center">
+			<i class="arrow-up fas fa-arrow-up"></i>
+			<span class="percent"></span>
+		</li>
+		
+		
+	</ul>
+</div>
+	</div>
+
+	<div class="image-viewer-container" role="dialog" aria-modal="true" aria-label="Image viewer">
+	<button class="image-viewer-close" type="button" aria-label="Close">
+		<i class="fa-solid fa-xmark"></i>
+	</button>
+	<button class="image-viewer-prev" type="button" aria-label="Prev">
+		<i class="fa-solid fa-chevron-left"></i>
+	</button>
+	<div class="image-viewer-frame">
+		<img src="" alt="">
+	</div>
+	<div class="image-viewer-exif-panel hidden absolute left-1/2 bottom-20 -translate-x-1/2 w-[min(92vw,420px)] max-h-[60vh] overflow-hidden rounded-2xl bg-background-color-transparent-80 p-4 text-left shadow-redefine-flat backdrop-blur-md" role="dialog" aria-label="EXIF" aria-hidden="true">
+		<div class="flex items-center justify-between mb-3">
+			<span class="text-sm font-semibold text-first-text-color">EXIF</span>
+			<button class="image-viewer-exif-close flex h-8 w-8 items-center justify-center rounded-full bg-background-color-transparent-80 text-first-text-color transition hover:bg-background-color-transparent-40" type="button" aria-label="Close">
+				<i class="fa-solid fa-xmark text-[0.65rem]"></i>
+			</button>
+		</div>
+		<div class="image-viewer-exif-cards grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto pr-1 scrollbar-hide"></div>
+		<template class="image-viewer-exif-card-template">
+			<div class="rounded-lg bg-background-color-transparent-40 px-3 py-2">
+				<div class="image-viewer-exif-card-header flex items-center gap-2 mb-1">
+					<i class="image-viewer-exif-card-icon fa-solid fa-circle-info text-xs text-third-text-color"></i>
+					<div class="image-viewer-exif-card-title text-xs font-semibold text-first-text-color"></div>
+				</div>
+				<div class="image-viewer-exif-card-items flex flex-col gap-1"></div>
+			</div>
+		</template>
+	</div>
+	<button class="image-viewer-exif-toggle flex items-center gap-2 hidden absolute left-1/2 bottom-6 -translate-x-1/2 rounded-full border border-border-color bg-background-color-transparent-80 px-4 py-2 text-first-text-color backdrop-blur-md transition hover:bg-background-color-transparent-40" type="button" aria-label="EXIF" aria-expanded="false">
+		<i class="fa-solid fa-circle-info text-xs"></i>
+		<span class="text-xs font-semibold uppercase tracking-wider">EXIF</span>
+	</button>
+	<button class="image-viewer-next" type="button" aria-label="Next">
+		<i class="fa-solid fa-chevron-right"></i>
+	</button>
+</div>
+
+
+	
+
+</main>
+
+
+
+<script src="/js/build/libs/Swup.min.js"></script>
+
+<script src="/js/build/libs/SwupSlideTheme.min.js"></script>
+
+<script src="/js/build/libs/SwupScriptsPlugin.min.js"></script>
+
+<script src="/js/build/libs/SwupProgressPlugin.min.js"></script>
+
+<script src="/js/build/libs/SwupScrollPlugin.min.js"></script>
+
+<script src="/js/build/libs/SwupPreloadPlugin.min.js"></script>
+
+<script>
+    window.swup = new Swup({
+        plugins: [
+            new SwupScriptsPlugin({
+                optin: true,
+            }),
+            new SwupProgressPlugin(),
+            new SwupScrollPlugin({
+                offset: 80,
+            }),
+            new SwupSlideTheme({
+                mainElement: ".main-content-body",
+            }),
+            new SwupPreloadPlugin(),
+        ],
+        containers: ["#swup"],
+    });
+
+    window.dispatchEvent(
+        new CustomEvent("redefine:swup:ready", {
+            detail: {
+                swup: window.swup,
+            },
+        }),
+    );
+</script>
+
+
+
+
+	
+<script src="/js/build/main.js" type="module"></script>
+
+
+
+    
+<script src="/js/build/libs/odometer.min.js"></script>
+
+    
+<link rel="stylesheet" href="/assets/odometer-theme-minimal.css">
+
+
+
+
+
+
+
+  
+<script src="/js/build/libs/Typed.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+<script src="/js/build/libs/moment-with-locales.min.js" data-swup-reload-script=""></script>
+
+
+
+	
+</body>
+
+</html>
